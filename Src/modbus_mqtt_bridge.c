@@ -67,12 +67,10 @@ uint32_t port1_baud,port1_stop,port1_databit,port1_parity;
 uint8_t num_device;
 static data1_t *ptr;
 data1_t test;
-static mqtt_Info_t *mqtt;
-mqtt_Info_t mqtt_Info;
 
 data1_t *dynamic;
-static uint8_t dem = 0;  // count
-static uint8_t telemetry = 0;  // count
+static uint8_t counter = 0;
+static uint8_t telemetry = 0;
 uint8_t id_temp[2];
 uint8_t num_device;
 /* Start implementation ----------------------*/
@@ -346,16 +344,12 @@ void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_top
 	uint8_t time[6];
 	BaseType_t Err = pdFALSE;
 	xQueueMbMqtt_t xQueueMbMqtt;
-	portCHAR main[MAX_JSON_LEN];
 	portCHAR head[MAX_JSON_LEN];
 	portCHAR tail[MAX_JSON_LEN];
 	portCHAR jsontemp[TEMP_JSON_LEN];
-	portCHAR jsontemp1[TEMP_JSON_LEN];
-	memset(main,'\0',sizeof(main));
+	portCHAR jsontempv1[TEMP_JSON_LEN];
 	memset(head,'\0',sizeof(head));
 	memset(tail,'\0',sizeof(tail));
-	memset(jsontemp,'\0',sizeof(jsontemp));
-	memset(jsontemp1,'\0',sizeof(jsontemp1));
 	static uint8_t count = 0;
 	err_t err;
 	while (1) {
@@ -417,60 +411,54 @@ void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_top
 				else if (err == ERR_OK){
 					xQueueMbMqtt.gotflagcommand = 0;
 				}
-			}/* --------------END OF SENDING COMAMND RESPONSE--------------------------------------------------------------------*/
-			else if (xQueueMbMqtt.gotflagtelemetry == 2){ // check telemetry
-				dem ++;
-//				float temp = 3.33;
-//				printf("\r\n Temp: %.2f\r\n",temp);
-			printf("\r\nTelemetry data: %d \t %d \t %d \t and dem : %d\r\n",xQueueMbMqtt.NodeID,xQueueMbMqtt.RegAdr.i16data ,xQueueMbMqtt.RegData.i16data, dem);
-//			dem ++;
-//			if (dem == 1) {
-//				id_temp[0] = xQueueMbMqtt.NodeID;
-//				head_telemetry(jsontemp, xQueueMbMqtt.NodeID);
-//				strcat(tail,jsontemp);
-//				tail_telemetry(jsontemp,xQueueMbMqtt.RegAdr.i16data, xQueueMbMqtt.RegData.i16data);
-//				strcat(tail,jsontemp);
-//			}
-//			if (dem > 1){
-//				id_temp[1] = xQueueMbMqtt.NodeID;
-//				if (id_temp[0] == id_temp[1]) {
-//					if (telemetry == 1) {
-//						strcat(head,jsontemp);
-//					}
-//					telemetry = 0;
-//					tail_telemetry(jsontemp,xQueueMbMqtt.RegAdr.i16data, xQueueMbMqtt.RegData.i16data);
-//					strcat(tail,jsontemp);
-//				}
-//				else if (id_temp[0] != id_temp[1]){
-//					id_temp[0] = id_temp[1];
-//					memset(jsontemp,'\0',sizeof(jsontemp));
-//					tail_telemetry(jsontemp,xQueueMbMqtt.RegAdr.i16data, xQueueMbMqtt.RegData.i16data);
-//					telemetry = 1;
-//					head[strlen(tail) - 1] = '\0';
-//					strcat(tail,"}");
-//				}
-//			}
-
-
-
-//			if (id_temp[0] != id_temp[1]) {
-//				memset(jsontemp,'\0',sizeof(jsontemp));
-//				tail_telemetry(jsontemp,xQueueMbMqtt.RegAdr.i16data, xQueueMbMqtt.RegData.i16data);
-//				telemetry = 1;
-//               	head[strlen(head) - 1] = '\0';
-//		        strcat(head,"}}}");
-//				err = mqtt_publish(client, pub_topic,head,strlen(head), QOS_0, 0,mqtt_bridge_pub_request_cb,NULL);
-//				dem = 0;
-//				if (err != ERR_OK) {
-//					printf("\r\n Publish err: %d\n", err);
-//					if (err == -11){
-//						//MX_LWIP_Init();
-//					}
-//				}
-//				else if (err == ERR_OK){
-//					xQueueMbMqtt.gotflagtelemetry = 0;
-//				}
-//			}
+			}/* --------------END OF SENDING COMAMND RESPONSE----------------------------------------------*/
+			else if (xQueueMbMqtt.gotflagLast == 2){
+				getTime(time);
+				timestamp_telemetry(head,time);
+				tail[strlen(tail) - 1] = '\0';
+				strcat(tail,"}}}");
+				strcat(head,tail);
+				err = mqtt_publish(client, pub_topic,head,strlen(head), QOS_0, 0,mqtt_bridge_pub_request_cb,NULL);
+				if (err != ERR_OK) {
+					printf("\r\n Publish err: %d\n", err);
+					if (err == -11){
+						//MX_LWIP_Init();
+					}
+				}
+				else if (err == ERR_OK){
+					memset(head,'\0',sizeof(head));
+					memset(tail,'\0',sizeof(tail));
+					counter = 0;
+				}
+			}
+			else if (xQueueMbMqtt.gotflagtelemetry == 2) { // check telemetry
+			printf("\r\nTelemetry data: %d \t %d \t %d\r\n",xQueueMbMqtt.NodeID,xQueueMbMqtt.RegAdr.i16data ,xQueueMbMqtt.RegData.i16data);
+			counter ++;
+			if (counter == 1) {
+				id_temp[0] = xQueueMbMqtt.NodeID;
+				head_telemetry(jsontemp, xQueueMbMqtt.NodeID);
+				strcat(tail,jsontemp);
+				if (telemetry == 1){
+					strcat(tail,jsontempv1);
+					telemetry = 0;
+				}
+				tail_telemetry(jsontemp,xQueueMbMqtt.RegAdr.i16data, xQueueMbMqtt.RegData.i16data);
+				strcat(tail,jsontemp);
+			}
+			if (counter > 1){
+				id_temp[1] = xQueueMbMqtt.NodeID;
+				if (id_temp[0] == id_temp[1]) {
+					tail_telemetry(jsontemp,xQueueMbMqtt.RegAdr.i16data, xQueueMbMqtt.RegData.i16data);
+					strcat(tail,jsontemp);
+				}
+				else if (id_temp[0] != id_temp[1]){
+					telemetry = 1;
+					counter = 0;
+					tail_telemetry(jsontempv1,xQueueMbMqtt.RegAdr.i16data, xQueueMbMqtt.RegData.i16data);
+					tail[strlen(tail) - 1] = '\0';
+					strcat(tail,"},");
+				}
+			}
 		}/* --------------END OF SENDING TELEMETRY--------------------------------------------------------------------*/
 	} else {
 			/*Create Json and publish to mqtt */

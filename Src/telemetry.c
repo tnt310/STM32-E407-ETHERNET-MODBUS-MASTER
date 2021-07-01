@@ -41,22 +41,22 @@ uint8_t timestamp_telemetry(char *buffer, uint8_t time[6])
     memset(buffer,'\0',sizeof(buffer));
     sprintf(buffer,"{\"timestamp\":\"20%d-%d-%dT%d:%d:%d.000Z\",\"data\":{",time[0],time[1],time[2],time[3],time[4],time[5]);
 }
-uint8_t head_telemetry(char *buffer, uint8_t time[6], uint8_t device_id)
-{
-    memset(buffer,'\0',sizeof(buffer));
-    sprintf(buffer,"{\"timestamp\":\"20%d-%d-%dT%d:%d:%d.000Z\",\"data\":{\"%d\":",time[0],time[1],time[2],time[3],time[4],time[5],device_id);
-}
+//uint8_t head_telemetry(char *buffer, uint8_t time[6], uint8_t device_id)
+//{
+//    memset(buffer,'\0',sizeof(buffer));
+//    sprintf(buffer,"{\"timestamp\":\"20%d-%d-%dT%d:%d:%d.000Z\",\"data\":{\"%d\":",time[0],time[1],time[2],time[3],time[4],time[5],device_id);
+//}
 uint8_t tail_telemetry(char *buffer, uint16_t device_channel, uint16_t value) //
 {
-    //memset(buffer,'\0',sizeof(buffer));
+    memset(buffer,'\0',sizeof(buffer));
     sprintf(buffer,"\"%d\":%d,",device_channel, value);
 }
 
-//uint8_t head_telemetry(char *buffer, uint8_t device_id)
-//{
-//    memset(buffer,'\0',sizeof(buffer));
-//    sprintf(buffer,"\"%d\":{",device_id);
-//}
+uint8_t head_telemetry(char *buffer, uint8_t device_id)
+{
+    memset(buffer,'\0',sizeof(buffer));
+    sprintf(buffer,"\"%d\":{",device_id);
+}
 //uint8_t tail_telemetry(char *buffer, uint16_t device_channel, uint16_t value) //
 //{
 //    memset(buffer,'\0',sizeof(buffer));

@@ -133,7 +133,7 @@ void ModbusTestTask(void const *argument) {
 		                            		}
 		                            		break;
 		                            	}
-		                            	osDelay(200);
+		                            	HAL_Delay(300);
 		                            }
 		                        }
 		                    }
@@ -141,7 +141,14 @@ void ModbusTestTask(void const *argument) {
 				}
 				TEST: count = 0;
 			}
-			osDelay(timeDelay*1000);
+			HAL_Delay(200);
+			xQueueMbMqtt.gotflagLast = 2;
+			BaseType_t Err = pdFALSE;
+			Err = xQueueSend(xQueueUplinkHandle, &xQueueMbMqtt,portDEFAULT_WAIT_TIME);
+			if (Err == pdPASS){
+				xQueueMbMqtt.gotflagLast = 0;
+			}
+			HAL_Delay(timeDelay * 1000);
 		}
 	}
 }

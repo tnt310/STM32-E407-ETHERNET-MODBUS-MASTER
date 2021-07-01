@@ -272,7 +272,7 @@ void StartDefaultTask(void const * argument)
 	printf("\r\n MemFree: %d", xPortGetFreeHeapSize());
 
 	/*Get time*/
-	osThreadDef(netTimeTask, NetworkTimeTask, osPriorityNormal, 0, 4 * 128);
+	osThreadDef(netTimeTask, NetworkTimeTask, osPriorityNormal, 0, 5 * 128);
 	netTimeTask = osThreadCreate(osThread(netTimeTask), NULL);
 	printf("\r\n MemFree: %d", xPortGetFreeHeapSize());
 

@@ -483,17 +483,23 @@ int Cmd_delete_line(int argc, char *argv[])
 {
 	printf("\nCmd_delete_line\r\n");
 	printf("------------------\r\n");
+	static uint16_t offset = 0;
 	static uint8_t lct = 0;
 	char *file =*(argv+1);
 	uint8_t line = atoi(*(argv+2));
+
+	printf("\r\nFile: %s - Line :%d\r\n",file,line);
 	MX_FATFS_Init();
 	if (f_mount(&fs, "/", 1) == FR_OK){
 		if(f_open(&fil,file, FA_READ|FA_WRITE) == FR_OK){
-			for (uint8_t i; (f_eof(&fil) == 0); i++)
+			for (uint8_t i = 0; (f_eof(&fil) == 0); i++)
 				{
+					memset(SDbuffer,'\0',sizeof(SDbuffer));
 					f_gets((char*)SDbuffer, sizeof(SDbuffer), &fil);
+					offset = offset + strlen(SDbuffer);
 					if (lct == line){
-						f_puts("hijklmn(456789)\n", &fil);
+						printf("\r\n Content detected at line %d: %s\r\n",lct, SDbuffer);
+						printf("\r\n offset now: %d\r\n",offset);
 						break;
 					}
 					else{

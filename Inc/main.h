@@ -137,6 +137,7 @@ typedef struct{
 	uint8_t gotflagtelemetry;
 	uint8_t mutex;
 	uint8_t sum_dev;
+	uint8_t gotflagLast;
 }xQueueMbMqtt_t;
 
 enum {
