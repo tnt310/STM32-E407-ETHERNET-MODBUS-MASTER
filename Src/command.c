@@ -515,11 +515,27 @@ int Cmd_get_ftell(int argc, char *argv[])
 		printf("\r\nNOT MOUTING SD CARD, PLEASE CHECK SD CARD\r\n");
 	}
 }
+uint8_t unlink(char *file)
+{
+	uint8_t status = 0;
+	if(f_opendir (&dirOject,"/") == FR_OK){
+		if(f_unlink(file) == FR_OK){
+			if(f_closedir(&dirOject) == FR_OK){
+				status = 1;
+			}
+		}else if(f_unlink(file) != FR_OK){
+			printf("\r\nDELETE FILE FAIL\r\n");
+		}
+	}else if(f_opendir(&dirOject,"/") != FR_OK){
+		printf("\r\nNOT MOUTING DIRECTORY\r\n");
+	}
+	printf("\r\n delete file status: %d\r\n",status);
+	return status;
+}
 int Cmd_delete_line(int argc, char *argv[])
 {
 	printf("\nCmd_delete_line\r\n");
 	printf("------------------\r\n");
-	//FIL fil_temp;
 	uint8_t lct = 0;
 	char *file =*(argv+1);
 	uint8_t line = (uint8_t)atoi(*(argv+2));
@@ -527,7 +543,7 @@ int Cmd_delete_line(int argc, char *argv[])
 	printf("\r\nFile: %s - Line :%d\r\n",file,line);
 	MX_FATFS_Init();
 	if (f_mount(&fs, "/", 1) == FR_OK){
-		if(f_open(&fil,file, FA_READ) == FR_OK){
+		if(f_open(&fil,file, FA_OPEN_ALWAYS|FA_READ|FA_WRITE) == FR_OK){
 			for (uint8_t i = 0; (f_eof(&fil) == 0); i++)
 				{
 					memset(SDbuffer,'\0',sizeof(SDbuffer));
@@ -536,20 +552,20 @@ int Cmd_delete_line(int argc, char *argv[])
 						f_open(&fil_temp,"temp.txt", FA_OPEN_ALWAYS|FA_WRITE);
 						f_lseek(&fil_temp, f_size(&fil_temp));
 						f_puts(data, &fil_temp);
-						f_sync(&fil_temp);
 						f_close(&fil_temp);
+						lct++;
 					}
 					else if (lct != line){
 						lct++;
 						f_open(&fil_temp,"temp.txt", FA_OPEN_ALWAYS|FA_WRITE);
 						f_lseek(&fil_temp, f_size(&fil_temp));
 						f_puts(SDbuffer, &fil_temp);
-						f_sync(&fil_temp);
 						f_close(&fil_temp);
 					}
 				}
+			f_unlink(file);
+			f_rename("temp.txt","test.txt");
 			f_close(&fil);
-
 		}
 	}else if (f_mount(&fs,"/", 1) != FR_OK) {
 		printf("\r\nNOT MOUTING SD CARD, PLEASE CHECK SD CARD\r\n");
