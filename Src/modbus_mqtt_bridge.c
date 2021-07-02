@@ -422,14 +422,25 @@ void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_top
 				if (err != ERR_OK) {
 					printf("\r\n Publish err: %d\n", err);
 					if (err == -11){
+						strcat(head,"\n");
+						RecordData("record.txt",head);// write data to sdcard
 						//MX_LWIP_Init();
+
+					}else if (err == -1){
+						strcat(head,"\n");
+						RecordData("record.txt",head);// write data to sdcard
+						// do something for err : out of memory
 					}
-				}
-				else if (err == ERR_OK){
 					memset(head,'\0',sizeof(head));
 					memset(tail,'\0',sizeof(tail));
 					counter = 0;
 				}
+				else if (err == ERR_OK){
+
+				}
+				memset(head,'\0',sizeof(head));
+				memset(tail,'\0',sizeof(tail));
+				counter = 0;
 			}
 			else if (xQueueMbMqtt.gotflagtelemetry == 2) { // check telemetry
 			printf("\r\nTelemetry data: %d \t %d \t %d\r\n",xQueueMbMqtt.NodeID,xQueueMbMqtt.RegAdr.i16data ,xQueueMbMqtt.RegData.i16data);

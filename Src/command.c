@@ -28,6 +28,7 @@ UART_HandleTypeDef huart6;
 uint8_t num_device;
 FATFS fs;
 FIL fil;
+FIL fil_temp;
 FRESULT fresult;
 DIR dirOject;
 FILINFO fileInfo;
@@ -68,8 +69,10 @@ int Cmd_list_file(int argc, char *argv[]);
 int Cmd_set_channelstatus(int argc, char *argv[]);
 int Cmd_delete_channel(int argc, char *argv[]);
 int Cmd_delete_line(int argc, char *argv[]);
+int Cmd_get_ftell(int argc, char *argv[]);
 
 tCmdLineEntry g_psCmdTable[] = {
+		{ "getftell",Cmd_get_ftell," : Send provision request" },
 		{ "deleteline",Cmd_delete_line," : Send provision request" },
 		{ "setfactory",Cmd_set_factory," : Send provision request" },
 		{ "settimeout",Cmd_set_timeout," : Send provision request" },
@@ -479,14 +482,13 @@ int Cmd_off_mutex(int argc, char *argv[]) {
 	uint32_t handle = 1;
 	xQueueSend(xQueueResetHandle,&handle,portMAX_DELAY);
 }
-int Cmd_delete_line(int argc, char *argv[])
+int Cmd_get_ftell(int argc, char *argv[])
 {
-	printf("\nCmd_delete_line\r\n");
+	printf("\nCmd_get_ftell\r\n");
 	printf("------------------\r\n");
-	static uint16_t offset = 0;
-	static uint8_t lct = 0;
+	uint8_t lct = 0;
 	char *file =*(argv+1);
-	uint8_t line = atoi(*(argv+2));
+	uint8_t line = (uint8_t)atoi(*(argv+2));
 
 	printf("\r\nFile: %s - Line :%d\r\n",file,line);
 	MX_FATFS_Init();
@@ -496,13 +498,14 @@ int Cmd_delete_line(int argc, char *argv[])
 				{
 					memset(SDbuffer,'\0',sizeof(SDbuffer));
 					f_gets((char*)SDbuffer, sizeof(SDbuffer), &fil);
-					offset = offset + strlen(SDbuffer);
 					if (lct == line){
-						printf("\r\n Content detected at line %d: %s\r\n",lct, SDbuffer);
-						printf("\r\n offset now: %d\r\n",offset);
+						printf("\r\n f_tell return: %d\r\n",(uint8_t)f_tell(&fil));
+						printf("\r\n f_tell new return: %d\r\n",(uint8_t)f_tell(&fil) - strlen(SDbuffer));
+						f_lseek(&fil, f_tell(&fil) - strlen(SDbuffer));
+						printf("\r\n f_tell new return: %d\r\n",(uint8_t)f_tell(&fil));
 						break;
 					}
-					else{
+					else if (lct < line){
 						lct++;
 					}
 				}
@@ -511,7 +514,47 @@ int Cmd_delete_line(int argc, char *argv[])
 	}else if (f_mount(&fs,"/", 1) != FR_OK) {
 		printf("\r\nNOT MOUTING SD CARD, PLEASE CHECK SD CARD\r\n");
 	}
+}
+int Cmd_delete_line(int argc, char *argv[])
+{
+	printf("\nCmd_delete_line\r\n");
+	printf("------------------\r\n");
+	//FIL fil_temp;
+	uint8_t lct = 0;
+	char *file =*(argv+1);
+	uint8_t line = (uint8_t)atoi(*(argv+2));
+	char *data = "{Hello m con di ngu ngoc}\n";
+	printf("\r\nFile: %s - Line :%d\r\n",file,line);
+	MX_FATFS_Init();
+	if (f_mount(&fs, "/", 1) == FR_OK){
+		if(f_open(&fil,file, FA_READ) == FR_OK){
+			for (uint8_t i = 0; (f_eof(&fil) == 0); i++)
+				{
+					memset(SDbuffer,'\0',sizeof(SDbuffer));
+					f_gets((char*)SDbuffer, sizeof(SDbuffer), &fil);
+					if (lct == line){
+						f_open(&fil_temp,"temp.txt", FA_OPEN_ALWAYS|FA_WRITE);
+						f_lseek(&fil_temp, f_size(&fil_temp));
+						f_puts(data, &fil_temp);
+						f_sync(&fil_temp);
+						f_close(&fil_temp);
+					}
+					else if (lct != line){
+						lct++;
+						f_open(&fil_temp,"temp.txt", FA_OPEN_ALWAYS|FA_WRITE);
+						f_lseek(&fil_temp, f_size(&fil_temp));
+						f_puts(SDbuffer, &fil_temp);
+						f_sync(&fil_temp);
+						f_close(&fil_temp);
+					}
+				}
+			f_close(&fil);
+
+		}
+	}else if (f_mount(&fs,"/", 1) != FR_OK) {
+		printf("\r\nNOT MOUTING SD CARD, PLEASE CHECK SD CARD\r\n");
 	}
+}
 int Cmd_set_factory(int argc, char *argv[])
 {
 	printf("\nCmd_set_factory\r\n");
@@ -589,6 +632,17 @@ uint8_t LoadSdcard(char *file)
 		}
 	}else if (f_mount(&fs,"/", 1) != FR_OK){
 		printf("\r\n NOT MOUTING SDCARD WHEN RUNIING\r\n");
+	}
+	return status;
+}
+/*---------------------------WRITE DATA TO RECORD------------------------------------------------------------*/
+uint8_t RecordData(char *file, char *buffer)
+{
+	uint8_t status = 0;
+	if (write_sdcard(file, buffer) == 1){
+		status = 1;
+	}else if (write_sdcard(file, buffer) == 0){
+		printf("\nWRITE DATA INTO SD CARD FAIL CMNR\r\n");
 	}
 	return status;
 }

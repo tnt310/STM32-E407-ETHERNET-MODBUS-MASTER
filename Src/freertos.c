@@ -474,6 +474,11 @@ void StartDefaultTask(void const * argument)
 				uiSysUpdate = TRUE;
 				uiSysState++;
 			break;
+		case SYS_RECORD:
+			printf("\r\n SYS_RECORD: Starting...  \r\n");
+			uiSysUpdate = TRUE;
+			uiSysState++;
+			break;
 		case SYS_DEFAULT:
 			if (gotCommandFlag == 1) {
 				gotCommandFlag = 0;

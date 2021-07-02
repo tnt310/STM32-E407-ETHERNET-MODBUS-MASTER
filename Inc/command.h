@@ -18,5 +18,6 @@ int
 setAllLight(int argc, char *argv[]);
 void UARTIntHandler(void);
 uint8_t LoadSdcard(char *file);
+uint8_t RecordData(char *file, char *buffer);
 
 #endif
