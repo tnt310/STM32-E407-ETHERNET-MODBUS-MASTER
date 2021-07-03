@@ -280,8 +280,7 @@ eMBErrorCode    eMBMasterRegisterCB(UCHAR ucPort, UCHAR ucFunctionCode,
  *       within the requested address range. In this case a
  *       <b>ILLEGAL DATA ADDRESS</b> is sent as a response.
  */
-eMBErrorCode eMBMasterRegInputCB(UCHAR ucPort, UCHAR * pucRegBuffer, USHORT usAddress,
-		USHORT usNRegs );
+eMBErrorCode eMBMasterRegInputCB(UCHAR ucPort, UCHAR * pucRegBuffer, USHORT usAddress,USHORT usNRegs,eMBRegisterMode eMode);
 
 /*! \ingroup modbus_registers
  * \brief Callback function used if a <em>Holding Register</em> value is
@@ -340,8 +339,7 @@ eMBErrorCode eMBMasterRegHoldingCB_v1(UCHAR ucPort, UCHAR * pucRegBuffer, USHORT
  *       within the requested address range. In this case a
  *       <b>ILLEGAL DATA ADDRESS</b> is sent as a response.
  */
-eMBErrorCode eMBMasterRegCoilsCB( UCHAR * pucRegBuffer, USHORT usAddress,
-		USHORT usNCoils, eMBRegisterMode eMode );
+eMBErrorCode eMBMasterRegCoilsCB( UCHAR ucPort,  UCHAR * pucRegBuffer, USHORT usAddress,USHORT usNCoils, eMBRegisterMode eMode );
 
 /*! \ingroup modbus_registers
  * \brief Callback function used if a <em>Input Discrete Register</em> value is

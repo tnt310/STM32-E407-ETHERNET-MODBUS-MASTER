@@ -122,26 +122,31 @@ typedef union
 	uint16_t i16data;
 	uint8_t  i8data[2];
 }int16toint8;
-typedef struct{
+typedef union
+{
+	uint32_t i32data;
+	uint8_t  i8data[4];
 
+}int32toint8;
+typedef struct{
 	uint8_t  PortID;
 	uint8_t  NodeID;
 	uint8_t  FunC;
 	int16toint8 RegAdr;
-	//uint16_t RegAdr;
-	//uint16_t RegData;
 	int16toint8 RegData;
-	uint8_t  countflag;
+	int32toint8 RegData32;
 	uint8_t gotflagProvision;
 	uint8_t gotflagcommand;
 	uint8_t gotflagtelemetry;
+	uint8_t gotflagLast;
 	uint8_t mutex;
 	uint8_t sum_dev;
-	uint8_t gotflagLast;
+	uint8_t flag32;
+	uint16_t scale;
 }xQueueMbMqtt_t;
 
 enum {
-	SYS_START,SYS_MB_PROTOCOL, SYS_MB_APP,SYS_MB_DOWNLINK ,SYS_NET_TIME,SYS_CORE_DISCOV,SYS_MQTT,SYS_HTTP ,SYS_DEVICE, SYS_RECORD, SYS_DEFAULT
+	SYS_START,SYS_NET_TIME,SYS_CORE_DISCOV,SYS_MQTT,SYS_HTTP ,SYS_MB_PROTOCOL,SYS_MB_APP,SYS_MB_DOWNLINK ,SYS_DEVICE, SYS_RECORD, SYS_DEFAULT
 };
 /* USER CODE END Private defines */
 typedef struct{
@@ -158,7 +163,7 @@ typedef struct{
    uint8_t func;
    uint8_t devicestatus;
    uint8_t numreg;
-   uint8_t scale;
+   uint16_t scale;
    uint16_t deviceChannel;
    char *deviceType;
    char *deviceName;
@@ -168,6 +173,7 @@ typedef struct{
 
 extern data1_t *dynamic;
 extern uint8_t num_device;
+extern uint8_t main_mutex;
 #ifdef __cplusplus
 }
 #endif

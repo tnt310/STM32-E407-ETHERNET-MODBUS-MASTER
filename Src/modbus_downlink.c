@@ -21,17 +21,7 @@ extern osMessageQId xQueueUplinkHandle;
 extern osThreadId mbDownlinkTask;
 ///* Private variables ---------------------------------------------------------*/
 //
-#define M_REG_HOLDING_START            1
-#define M_REG_HOLDING_NREGS           200
 
-#define M_REG_INPUT_START              1
-#define M_REG_INPUT_NREGS             200
-
-#define M_REG_COIL_START               1
-#define M_REG_COIL_NREGS               200
-
-#define M_REG_DISCRETE_START           1
-#define M_REG_DISCRETE_NREGS           200
 
 void ModbusDownlinkTask(void const *argument) {
 
@@ -60,6 +50,11 @@ void ModbusDownlinkTask(void const *argument) {
 				Err = xQueueReceive(xQueueDownlinkHandle, &xQueueMbMqtt,portDEFAULT_WAIT_TIME);
 				if (Err == pdPASS) {
 					switch (xQueueMbMqtt.FunC) {
+					case MB_FUNC_READ_HOLDING_REGISTER:
+						eMBMasterReqReadHoldingRegister(xQueueMbMqtt.PortID,
+														xQueueMbMqtt.NodeID, xQueueMbMqtt.RegAdr.i16data,
+														xQueueMbMqtt.RegData.i16data, MB_DEFAULT_TEST_TIMEOUT);
+						break;
 					case MB_FUNC_WRITE_REGISTER:
 						eMBMasterReqWriteHoldingRegister(xQueueMbMqtt.PortID,
 														 xQueueMbMqtt.NodeID, xQueueMbMqtt.RegAdr.i16data,
@@ -71,44 +66,44 @@ void ModbusDownlinkTask(void const *argument) {
 			}
 }
 ///************************Master Callback Function for Holding Register****************************************************************************/
-eMBErrorCode eMBMasterRegHoldingCB_v1(UCHAR ucPort, UCHAR * pucRegBuffer, USHORT usAddress,USHORT usNRegs, eMBRegisterMode eMode)
-{
-	eMBErrorCode eStatus = MB_ENOERR;
-	USHORT iRegIndex;
-	USHORT REG_HOLDING_START = M_REG_HOLDING_START;
-	USHORT REG_HOLDING_NREGS = M_REG_HOLDING_NREGS;
-	/* FreeRTOS variable*/
-	xQueueMbMqtt_t xQueueMbMqtt;
-	xQueueMbMqtt.PortID = ucPort;
-	xQueueMbMqtt.NodeID = ucMBMasterGetDestAddress(ucPort);
-	/* if mode is read, the master will write the received date to buffer. */
-	usAddress--;
-	xQueueMbMqtt.RegAdr.i8data[0] = (uint8_t)usAddress;
-	xQueueMbMqtt.RegAdr.i8data[1] = (uint8_t)(usAddress >>8);
-	if ((usAddress >= REG_HOLDING_START)&& ((uint8_t)usAddress + usNRegs <= REG_HOLDING_START + REG_HOLDING_NREGS)) {
-		iRegIndex = usAddress - REG_HOLDING_START;
-		switch (eMode) {
-		case MB_REG_WRITE:
-			xQueueMbMqtt.FunC = MB_FUNC_WRITE_REGISTER;
-			while (usNRegs > 0)
-			{
-				xQueueMbMqtt.RegData.i8data[1] = (*pucRegBuffer);
-				xQueueMbMqtt.RegData.i8data[0] = *(pucRegBuffer + 1);
-				iRegIndex++;
-				usNRegs--;
-				printf("\r\n  data: %d ",xQueueMbMqtt.RegData.i16data);
-				printf("\r\n*****************\r\n");
-			}
-			break;
-		}
-		BaseType_t Err = pdFALSE;
-		Err = xQueueSend(xQueueUplinkHandle, &xQueueMbMqtt,portDEFAULT_WAIT_TIME);
-		if (Err == pdPASS) {
-			} else {
-			printf("\r\n Modbus_MQTT Up queued: False \r\n");
-		}
-		} else {
-		eStatus = MB_ENOREG;
-	}
-	return eStatus;
-}
+//eMBErrorCode eMBMasterRegHoldingCB_v1(UCHAR ucPort, UCHAR * pucRegBuffer, USHORT usAddress,USHORT usNRegs, eMBRegisterMode eMode)
+//{
+//	eMBErrorCode eStatus = MB_ENOERR;
+//	USHORT iRegIndex;
+//	USHORT REG_HOLDING_START = M_REG_HOLDING_START;
+//	USHORT REG_HOLDING_NREGS = M_REG_HOLDING_NREGS;
+//	/* FreeRTOS variable*/
+//	xQueueMbMqtt_t xQueueMbMqtt;
+//	xQueueMbMqtt.PortID = ucPort;
+//	xQueueMbMqtt.NodeID = ucMBMasterGetDestAddress(ucPort);
+//	/* if mode is read, the master will write the received date to buffer. */
+//	usAddress--;
+//	xQueueMbMqtt.RegAdr.i8data[0] = (uint8_t)usAddress;
+//	xQueueMbMqtt.RegAdr.i8data[1] = (uint8_t)(usAddress >>8);
+//	if ((usAddress >= REG_HOLDING_START)&& ((uint8_t)usAddress + usNRegs <= REG_HOLDING_START + REG_HOLDING_NREGS)) {
+//		iRegIndex = usAddress - REG_HOLDING_START;
+//		switch (eMode) {
+//		case MB_REG_WRITE:
+//			xQueueMbMqtt.FunC = MB_FUNC_WRITE_REGISTER;
+//			while (usNRegs > 0)
+//			{
+//				xQueueMbMqtt.RegData.i8data[1] = (*pucRegBuffer);
+//				xQueueMbMqtt.RegData.i8data[0] = *(pucRegBuffer + 1);
+//				iRegIndex++;
+//				usNRegs--;
+//				printf("\r\n  data: %d ",xQueueMbMqtt.RegData.i16data);
+//				printf("\r\n*****************\r\n");
+//			}
+//			break;
+//		}
+//		BaseType_t Err = pdFALSE;
+//		Err = xQueueSend(xQueueUplinkHandle, &xQueueMbMqtt,portDEFAULT_WAIT_TIME);
+//		if (Err == pdPASS) {
+//			} else {
+//			printf("\r\n Modbus_MQTT Up queued: False \r\n");
+//		}
+//		} else {
+//		eStatus = MB_ENOREG;
+//	}
+//	return eStatus;
+//}

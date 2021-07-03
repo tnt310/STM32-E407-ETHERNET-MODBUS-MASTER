@@ -14,6 +14,7 @@ typedef struct
 	uint8_t channel;
 	uint8_t id;
 	uint8_t func;
+	uint8_t numreg;
 	uint16_t regAdr;
 }device_t;
 

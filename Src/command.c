@@ -46,6 +46,10 @@ char *mqtt_file = "mqtt.txt";
 char *serial_file = "serial.txt";
 
 int Cmd_set_timeout(int argc, char *argv[]);
+int Cmd_set_port0(int argc, char *argv[]);
+int Cmd_set_port1(int argc, char *argv[]);
+int Cmd_set_network(int argc, char *argv[]);
+int Cmd_set_mqttInfo(int argc, char *argv[]);
 int Cmd_get_time(int argc, char *argv[]);
 int Cmd_off_mutex(int argc, char *argv[]);
 int Cmd_set_mutex(int argc, char *argv[]);
@@ -60,7 +64,6 @@ int Cmd_allocate_device(int argc, char *argv[]);
 int Cmd_delete_device(int argc, char *argv[]);
 int Cmd_set_device(int argc, char *argv[]);
 int Cmd_set_config(int argc, char *argv[]);
-int Cmd_read_config(int argc, char *argv[]);
 int Cmd_set_factory(int argc, char *argv[]);
 int Cmd_delete_file(int argc, char *argv[]);
 int Cmd_new_file(int argc, char *argv[]);
@@ -69,13 +72,17 @@ int Cmd_list_file(int argc, char *argv[]);
 int Cmd_set_channelstatus(int argc, char *argv[]);
 int Cmd_delete_channel(int argc, char *argv[]);
 int Cmd_delete_line(int argc, char *argv[]);
-int Cmd_get_ftell(int argc, char *argv[]);
+int Cmd_check_record(int argc, char *argv[]);
 
 tCmdLineEntry g_psCmdTable[] = {
-		{ "getftell",Cmd_get_ftell," : Send provision request" },
+		{ "checkrecord",Cmd_check_record," : Send provision request" },
 		{ "deleteline",Cmd_delete_line," : Send provision request" },
 		{ "setfactory",Cmd_set_factory," : Send provision request" },
-		{ "settimeout",Cmd_set_timeout," : Send provision request" },
+		{ "configtimeout",Cmd_set_timeout," : Send provision request" },
+		{ "configport0",Cmd_set_port0," : Send provision request" },
+		{ "configport1",Cmd_set_port1," : Send provision request" },
+		{ "confignetwork",Cmd_set_network," : Send provision request" },
+		{ "configmqtt",Cmd_set_mqttInfo," : Send provision request" },
 		{ "gettime",Cmd_get_time," : Send provision request" },
 		{ "setmqttport", Cmd_mqtt_port," : Set static ip for brigde" },
 		{ "setip", Cmd_set_localip," : Set static ip for brigde" },
@@ -88,14 +95,14 @@ tCmdLineEntry g_psCmdTable[] = {
 		{ "setmutex", Cmd_set_mutex," : Update network" },
 		{ "offmutex", Cmd_off_mutex," : Send provision request" },
 		{ "check",Cmd_delete_device," : Update network" },
+		{ "deletechannel",Cmd_delete_channel," : Send provision request" },
 		{ "setdevice", Cmd_set_device," : Send provision request" },
 		{ "setconfig", Cmd_set_config," : Send provision request" },
-		{ "readconfig", Cmd_read_config," : Send provision request" },
-		{ "newfile",Cmd_new_file," : Send provision request" },
+		{ "touch",Cmd_new_file," : Send provision request" },
 		{ "rm",Cmd_delete_file," : Send provision request" },
 		{ "nano",Cmd_read_file," : Send provision request" },
 		{ "ls",Cmd_list_file," : Send provision request" },
-		{ "deletechannel",Cmd_delete_channel," : Send provision request" },
+
 		{ 0, 0, 0 } };
 
 const char * ErrorCode[4] = { "CMDLINE_BAD_CMD", "CMDLINE_TOO_MANY_ARGS",
@@ -228,22 +235,6 @@ int Cmd_delete_channel(int argc, char *argv[])
 
 	}
 /*---------------------------SET PARAMETER INTO SDCARD-----------------------------------------------------------------------*/
-int Cmd_read_config(int argc, char *argv[])
-{
-	printf("\r\nCmd_read_config_file\r\n");
-	printf("------------------\r\n");
-	uint8_t i;
-	MX_FATFS_Init();
-	fresult = f_mount(&fs, "/", 1);
-	fresult = f_open(&fil,"config.txt", FA_READ);
-	for (i = 0; (f_eof(&fil) == 0); i++){
-		memset(SDbuffer,'\0',sizeof(SDbuffer));
-		f_gets((char*)SDbuffer, sizeof(SDbuffer), &fil);
-		printf("\r\n SDbuffer from config file: %s\r\n",SDbuffer);
-	}
-	fresult = f_close(&fil);
-	printf("\r\nNum of line: %d\r\n", i);
-}
 static uint8_t write_sdcard(char *file,char *buffer)
 {
 	uint8_t status = 0;
@@ -482,39 +473,7 @@ int Cmd_off_mutex(int argc, char *argv[]) {
 	uint32_t handle = 1;
 	xQueueSend(xQueueResetHandle,&handle,portMAX_DELAY);
 }
-int Cmd_get_ftell(int argc, char *argv[])
-{
-	printf("\nCmd_get_ftell\r\n");
-	printf("------------------\r\n");
-	uint8_t lct = 0;
-	char *file =*(argv+1);
-	uint8_t line = (uint8_t)atoi(*(argv+2));
 
-	printf("\r\nFile: %s - Line :%d\r\n",file,line);
-	MX_FATFS_Init();
-	if (f_mount(&fs, "/", 1) == FR_OK){
-		if(f_open(&fil,file, FA_READ|FA_WRITE) == FR_OK){
-			for (uint8_t i = 0; (f_eof(&fil) == 0); i++)
-				{
-					memset(SDbuffer,'\0',sizeof(SDbuffer));
-					f_gets((char*)SDbuffer, sizeof(SDbuffer), &fil);
-					if (lct == line){
-						printf("\r\n f_tell return: %d\r\n",(uint8_t)f_tell(&fil));
-						printf("\r\n f_tell new return: %d\r\n",(uint8_t)f_tell(&fil) - strlen(SDbuffer));
-						f_lseek(&fil, f_tell(&fil) - strlen(SDbuffer));
-						printf("\r\n f_tell new return: %d\r\n",(uint8_t)f_tell(&fil));
-						break;
-					}
-					else if (lct < line){
-						lct++;
-					}
-				}
-			f_close(&fil);
-		}
-	}else if (f_mount(&fs,"/", 1) != FR_OK) {
-		printf("\r\nNOT MOUTING SD CARD, PLEASE CHECK SD CARD\r\n");
-	}
-}
 uint8_t unlink(char *file)
 {
 	uint8_t status = 0;
@@ -564,7 +523,7 @@ int Cmd_delete_line(int argc, char *argv[])
 					}
 				}
 			f_unlink(file);
-			f_rename("temp.txt","test.txt");
+			f_rename("temp.txt",file);
 			f_close(&fil);
 		}
 	}else if (f_mount(&fs,"/", 1) != FR_OK) {
@@ -596,27 +555,91 @@ int Cmd_get_time(int argc, char *argv[])
 	getTime(time);
 	printf("\r\nTime from RTC: %d\t %d\t %d\t %d\t %d\t %d\r\n",time[0],time[1],time[2],time[3],time[4],time[5]);
 }
+static uint8_t overwrite_file(char *file, char *data, uint8_t line)
+{
+	uint8_t lct = 0;
+	MX_FATFS_Init();
+	if (f_mount(&fs, "/", 1) == FR_OK){
+		if(f_open(&fil,file,FA_OPEN_ALWAYS|FA_READ|FA_WRITE) == FR_OK){
+			for (uint8_t i = 0; (f_eof(&fil) == 0); i++)
+				{
+					memset(SDbuffer,'\0',sizeof(SDbuffer));
+					f_gets((char*)SDbuffer, sizeof(SDbuffer), &fil);
+					if (lct == line){
+						f_open(&fil_temp,"temp.txt", FA_OPEN_ALWAYS|FA_WRITE);
+						f_lseek(&fil_temp, f_size(&fil_temp));
+						f_puts(data, &fil_temp);
+						f_close(&fil_temp);
+						lct++;
+					}
+					else if (lct != line){
+						lct++;
+						f_open(&fil_temp,"temp.txt", FA_OPEN_ALWAYS|FA_WRITE);
+						f_lseek(&fil_temp, f_size(&fil_temp));
+						f_puts(SDbuffer, &fil_temp);
+						f_close(&fil_temp);
+					}
+				}
+			f_unlink(file);
+			f_rename("temp.txt",file);
+			f_close(&fil);
+		}
+	}else if (f_mount(&fs,"/", 1) != FR_OK) {
+		printf("\r\nNOT MOUTING SD CARD, PLEASE CHECK SD CARD\r\n");
+	}
+}
 int Cmd_set_timeout(int argc, char *argv[]) // timeout: 15s, 30s, 1p, 3p, 5p, 10p
 {
-	printf("\nCmd_get_time\r\n");
-	printf("------------------\r\n");
 	uint16_t timeout= atoi(*(argv+1));
-	if(timeout == 15){
-		timeDelay = 15;
-	}else if (timeout == 30){
-		timeDelay = 30;
-	}else if (timeout == 60){
-		timeDelay = 60;
-	}else if (timeout == 180){
-		timeDelay = 180;
-	}else if (timeout== 300){
-		timeDelay = 300;
-	}else if (timeout == 600){
-		timeDelay = 600;
-	}
-	else
-		timeDelay = 60;
-	printf("\r\n timeout is set: %d\r\n",timeDelay);
+	char buffer[20];
+	SD_timeout(buffer,timeout);
+	printf("\r\n timeout is set: %s\r\n",buffer);
+	overwrite_file("test.txt",buffer, 4);
+}
+int Cmd_set_port0(int argc, char *argv[]) // timeout: 15s, 30s, 1p, 3p, 5p, 10p
+{
+	uint8_t baud= atoi(*(argv+1));
+	uint8_t dbbits= atoi(*(argv+2));
+	uint8_t stops= atoi(*(argv+3));
+	uint8_t parity= atoi(*(argv+4));
+	char buffer[100];
+	SD_Serial(buffer,2, baud,dbbits, stops, parity);
+	printf("\r\n port0 is set: %s\r\n",buffer);
+	overwrite_file("test.txt",buffer, 2);
+}
+int Cmd_set_port1(int argc, char *argv[]) // timeout: 15s, 30s, 1p, 3p, 5p, 10p
+{
+	uint8_t baud= atoi(*(argv+1));
+	uint8_t dbbits= atoi(*(argv+2));
+	uint8_t stops= atoi(*(argv+3));
+	uint8_t parity= atoi(*(argv+4));
+	char buffer[100];
+	SD_Serial(buffer,3, baud,dbbits, stops, parity);
+	printf("\r\n port1 is set: %s\r\n",buffer);
+	overwrite_file("test.txt",buffer, 3);
+}
+int Cmd_set_network(int argc, char *argv[]) // timeout: 15s, 30s, 1p, 3p, 5p, 10p
+{
+	char *ip = *(argv+1);
+	char *netmask = *(argv+2);
+	char *gateway = *(argv+3);
+	char *broker = *(argv+4);
+	char buffer[200];
+	SD_Network(buffer, ip, netmask, gateway, broker);
+	printf("\r\n network is set: %s\r\n",buffer);
+	overwrite_file("test.txt",buffer, 0);
+}
+int Cmd_set_mqttInfo(int argc, char *argv[]) // timeout: 15s, 30s, 1p, 3p, 5p, 10p
+{
+	char *id = *(argv+1);
+	char *username = *(argv+2);
+	char *pwd = *(argv+3);
+	uint16_t port = atoi(*(argv+4));
+	char *apikey = *(argv+5);
+	char buffer[200];
+	SD_Mqtt(buffer, port,id, username, pwd, apikey);
+	printf("\r\n mqttInfo is set: %s\r\n",buffer);
+	overwrite_file("test.txt",buffer, 1);
 }
 /*---------------------------SAVE------------------------------------------------------------------------------*/
 int Cmd_save(int argc, char *argv[]) {
@@ -661,4 +684,64 @@ uint8_t RecordData(char *file, char *buffer)
 		printf("\nWRITE DATA INTO SD CARD FAIL CMNR\r\n");
 	}
 	return status;
+}
+uint8_t CheckRecord(char *file)
+{
+	uint8_t status = 0;
+	uint8_t line = 0;
+	MX_FATFS_Init();
+	if (f_mount(&fs,"/", 1) == FR_OK){
+		if (f_open(&fil,file, FA_READ) == FR_OK){
+			if (f_eof(&fil) != 0){
+				printf("\r\n NO DATA IN FILE RECORD.TXT\r\n");
+			}else if(f_eof(&fil) == 0){
+				status = 1;
+				printf("\r\n HAVE DATA IN FILE RECORD.TXT\r\n");
+			}
+			f_close(&fil);
+		}else if (f_open(&fil,file, FA_READ) != FR_OK){
+			printf("\r\n NOT OPEN FILE\r\n");
+		}
+	}else if (f_mount(&fs,"/", 1) != FR_OK){
+		printf("\r\n NOT MOUTING SDCARD WHEN RUNIING\r\n");
+	}
+	return status;
+}
+int Cmd_check_record(int argc, char *argv[])
+{
+	printf("\nCmd_get_time\r\n");
+	printf("------------------\r\n");
+	char *file =*(argv+1);
+	CheckRecord(file);
+	}
+void ftoa(char buffer[20], char string[20], uint16_t scale)
+{
+	char temp, temp1, temp2;
+	char val[20];
+	memset(val,'\0',sizeof(val));
+	strncpy(val,string,strlen(string));
+	memset(buffer,'\0',sizeof(buffer));
+	for (uint8_t i = 0; i < strlen(string); i++){
+		buffer[i] = string[i];
+	}
+	if (scale == 10) {
+		temp = buffer[strlen(string)-1];
+		buffer[strlen(string)-1] = '.';
+		buffer[strlen(string)] = temp;
+	}else if (scale == 100) {
+		temp = buffer[strlen(string) -2];
+		temp1 = buffer[strlen(string) -1];
+		buffer[strlen(string) -2] = '.';
+		buffer[strlen(string) -1] = temp;
+		buffer[strlen(string)] = temp1;
+	}
+	else if (scale == 1000){
+		temp = buffer[strlen(string) -3]; // 3
+		temp1 = buffer[strlen(string) -2]; // 4
+		temp2 = buffer[strlen(string) -1];  // 5
+		buffer[strlen(string) -3] = '.';
+		buffer[strlen(string) -2] = temp;//3
+		buffer[strlen(string) - 1] = temp1; //4
+		buffer[strlen(string)] = temp2;  // 5
+	}
 }

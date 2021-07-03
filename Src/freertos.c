@@ -62,8 +62,9 @@ FIL fil;
 FATFS fs;
 FIL fil;
 FRESULT fresult,fre;
-char SDbuffer[200];
 
+extern char recordbuffer[1000];
+char SDbuffer[200];
 static data1_t *ptr;
 data1_t *dynamic;
 uint8_t num_device;
@@ -83,6 +84,7 @@ extern uint32_t gotCommandFlag;
 extern uint8_t commandBuffer[200];
 extern uint32_t commandBufferIndex;
 
+
 osMessageQId xQueueControlHandle;
 osMessageQId xQueueMessageHandle;
 osMessageQId xQueueDownlinkHandle;
@@ -92,7 +94,7 @@ osMessageQId xQueueResetHandle;
 osThreadId defaultTaskHandle;
 osTimerId myTimer01Handle;
 osSemaphoreId netMqttIpSemaphoreHandle;
-
+xQueueMbMqtt_t xQueueMbMqtt;
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
 extern void ModbusRTUTask(void const * argument);
@@ -257,7 +259,7 @@ void StartDefaultTask(void const * argument)
 	/*Create Task Modules in this line*/
 
 	/*Modbus protocol stack*/
-	osThreadDef(mbProtocolTask, ModbusRTUTask, osPriorityNormal, 0, 4 * 128);
+	osThreadDef(mbProtocolTask, ModbusRTUTask, osPriorityNormal, 0, 8 * 128);
 	mbProtocolTask = osThreadCreate(osThread(mbProtocolTask), NULL);
 	printf("\r\n MemFree: %d", xPortGetFreeHeapSize());
 
@@ -267,7 +269,7 @@ void StartDefaultTask(void const * argument)
 	printf("\r\n MemFree: %d", xPortGetFreeHeapSize());
 
 	/*Modbus Downlink */
-	osThreadDef(mbDownlinkTask, ModbusDownlinkTask, osPriorityNormal, 0, 2 * 128);
+	osThreadDef(mbDownlinkTask, ModbusDownlinkTask, osPriorityNormal, 0, 4 * 128);
 	mbDownlinkTask= osThreadCreate(osThread(mbDownlinkTask), NULL);
 	printf("\r\n MemFree: %d", xPortGetFreeHeapSize());
 
@@ -471,11 +473,30 @@ void StartDefaultTask(void const * argument)
 						printf("\r\n-----------------------ALLOCATING MEMORY FAIL------------------------\r\n");
 					}
 //				}
+				main_mutex = 1;
 				uiSysUpdate = TRUE;
 				uiSysState++;
 			break;
 		case SYS_RECORD:
 			printf("\r\n SYS_RECORD: Starting...  \r\n");
+			BaseType_t Err = pdFALSE;
+			if (CheckRecord("record.txt") == 1){
+				MX_FATFS_Init();
+				fresult = f_mount(&fs, "/", 1);
+				fresult = f_open(&fil,"record.txt", FA_READ);
+				for (uint8_t i= 0; (f_eof(&fil) == 0); i++)
+					{
+						memset(recordbuffer,'\0',sizeof(recordbuffer));
+						f_gets((char*)recordbuffer, sizeof(recordbuffer), &fil);
+						xQueueMbMqtt.gotflagLast = 1;
+						Err = xQueueSend(xQueueUplinkHandle, &xQueueMbMqtt,portDEFAULT_WAIT_TIME);
+						if (Err == pdPASS){
+							xQueueMbMqtt.gotflagLast = 0;
+						}
+						//printf("\r\n buffer: %s\r\n",recordbuffer);
+					}
+				fresult = f_close(&fil);
+			}
 			uiSysUpdate = TRUE;
 			uiSysState++;
 			break;

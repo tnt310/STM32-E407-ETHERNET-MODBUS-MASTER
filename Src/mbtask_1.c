@@ -32,20 +32,17 @@ uint8_t num_device;
 extern uint32_t modbus_mutex;
 extern uint32_t timeDelay;
 static uint8_t count = 0;
+uint8_t main_mutex;
 /* Private variables ---------------------------------------------------------*/
 
-#define M_REG_HOLDING_START            1
+#define M_REG_HOLDING_START            0
 #define M_REG_HOLDING_NREGS            65000
 
-#define M_REG_INPUT_START              1
-#define M_REG_INPUT_NREGS             65000
+#define M_REG_COIL_START               0
+#define M_REG_COIL_NREGS               65000
 
-#define M_REG_COIL_START               1
-#define M_REG_COIL_NREGS              65000
-
-#define M_REG_DISCRETE_START           1
-#define M_REG_DISCRETE_NREGS          65000
-
+#define M_REG_INPUT_START              0
+#define M_REG_INPUT_NREGS              65000
 /*----------------------------------------------------------------------------------------------------------------------------------*/
 
 void ModbusRTUTask(void const *argument) {
@@ -122,13 +119,20 @@ void ModbusTestTask(void const *argument) {
 		                            	device.id = (dynamic +z)->deviceID;
 		                            	device.func = (dynamic +z)->func;
 		                            	device.regAdr = (dynamic +z)->deviceChannel;
+		                            	device.numreg =(dynamic +z)->numreg;
 		                            	switch(device.channel)
 		                            	{
 		                            		case 0:
 		                            		switch(device.func)
 		                            		{
 		                            			case MB_FUNC_READ_HOLDING_REGISTER:
-		                            				eMBMasterReqReadHoldingRegister(device.channel, device.id, device.regAdr,MB_DEFAULT_TEST_NREG, MB_DEFAULT_TEST_TIMEOUT);
+		                            				eMBMasterReqReadHoldingRegister(device.channel, device.id, device.regAdr,device.numreg, MB_DEFAULT_TEST_TIMEOUT);
+		                            				break;
+		                            			case MB_FUNC_READ_COILS:
+		                            				eMBMasterReqReadCoils(device.channel, device.id, device.regAdr,device.numreg, MB_DEFAULT_TEST_TIMEOUT);
+		                            				break;
+		                            			case MB_FUNC_READ_INPUT_REGISTER:
+		                            				eMBMasterReqReadInputRegister(device.channel, device.id, device.regAdr,device.numreg, MB_DEFAULT_TEST_TIMEOUT);
 		                            				break;
 		                            		}
 		                            		break;
@@ -141,24 +145,30 @@ void ModbusTestTask(void const *argument) {
 				}
 				TEST: count = 0;
 			}
-			HAL_Delay(200);
+			HAL_Delay(10000);
 			xQueueMbMqtt.gotflagLast = 2;
 			BaseType_t Err = pdFALSE;
 			Err = xQueueSend(xQueueUplinkHandle, &xQueueMbMqtt,portDEFAULT_WAIT_TIME);
 			if (Err == pdPASS){
 				xQueueMbMqtt.gotflagLast = 0;
 			}
-			HAL_Delay(timeDelay * 1000);
+			HAL_Delay((timeDelay*1000)-(300*num_device)-200-11000);
 		}
 	}
 }
 /*--------------------------Master Callback Function for Holding Register---------------------------------------------------------------------------*/
 eMBErrorCode eMBMasterRegHoldingCB(UCHAR ucPort, UCHAR * pucRegBuffer, USHORT usAddress,USHORT usNRegs, eMBRegisterMode eMode)
 {
+	USHORT usMRegHoldStart = M_REG_HOLDING_START;
+	USHORT usMRegHoldBuf[MB_RS485_MAX_PORT][MB_MASTER_TOTAL_SLAVE_NUM][M_REG_HOLDING_NREGS];
 	eMBErrorCode eStatus = MB_ENOERR;
 	USHORT iRegIndex;
-	USHORT REG_HOLDING_START = M_REG_HOLDING_START;
-	USHORT REG_HOLDING_NREGS = M_REG_HOLDING_NREGS;
+	USHORT * pusRegHoldingBuf;
+	USHORT REG_HOLDING_START;
+	USHORT REG_HOLDING_NREGS;
+	USHORT usRegHoldStart;
+	REG_HOLDING_START = M_REG_HOLDING_START;
+	REG_HOLDING_NREGS = M_REG_HOLDING_NREGS;
 	/* FreeRTOS variable*/
 	xQueueMbMqtt_t xQueueMbMqtt;
 	xQueueMbMqtt.PortID = ucPort;
@@ -167,6 +177,7 @@ eMBErrorCode eMBMasterRegHoldingCB(UCHAR ucPort, UCHAR * pucRegBuffer, USHORT us
 	usAddress--; // must have if u do not want to be stupid
 	xQueueMbMqtt.RegAdr.i8data[0] = (uint8_t)usAddress;
 	xQueueMbMqtt.RegAdr.i8data[1] = (uint8_t)(usAddress >> 8);
+	uint8_t reg_temp = usNRegs;
 	if ((usAddress >= REG_HOLDING_START)&& ((uint8_t)usAddress + usNRegs <= REG_HOLDING_START + REG_HOLDING_NREGS)) {
 		iRegIndex = usAddress - REG_HOLDING_START;
 		switch (eMode) {
@@ -174,15 +185,43 @@ eMBErrorCode eMBMasterRegHoldingCB(UCHAR ucPort, UCHAR * pucRegBuffer, USHORT us
 			xQueueMbMqtt.FunC = MB_FUNC_READ_HOLDING_REGISTER;
 			while (usNRegs > 0)
 			{
-				xQueueMbMqtt.RegData.i8data[1] = *(pucRegBuffer);  // High Byte
-				xQueueMbMqtt.RegData.i8data[0] = *(pucRegBuffer + 1); // Low Byte
-				iRegIndex++;
-				usNRegs--;
-				//printf("\r\n  data telemetry: %d\t%d\t%d ",xQueueMbMqtt.NodeID,xQueueMbMqtt.RegAdr.i16data ,xQueueMbMqtt.RegData.i16data);
-				//printf("\r\n-------------\r\n");
+				if (reg_temp == 2){ // with U32
+					xQueueMbMqtt.RegData32.i8data[1] = *(pucRegBuffer);  // byte 1
+					xQueueMbMqtt.RegData32.i8data[0] = *(pucRegBuffer + 1);// byte 0
+					//printf("\r\n- data byte 0: %d ", *(pucRegBuffer + 1));
+					//printf("\r\n- data byte 1: %d ", *(pucRegBuffer));
+					pusRegHoldingBuf[iRegIndex] = *pucRegBuffer++ << 8;
+					pusRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
+					iRegIndex++;
+					usNRegs--;
+					xQueueMbMqtt.RegData32.i8data[3] = *(pucRegBuffer);  // byte 1
+					xQueueMbMqtt.RegData32.i8data[2] = *(pucRegBuffer + 1);// byte 0
+					//printf("\r\n- data byte 2: %d ", *(pucRegBuffer + 1));
+					//printf("\r\n- data byte 3: %d ", *(pucRegBuffer));
+					pusRegHoldingBuf[iRegIndex] = *pucRegBuffer++ << 8;
+					pusRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
+					iRegIndex++;
+					usNRegs--;
+					printf("\r\n- data read from U32: %d \r\n ", xQueueMbMqtt.RegData32.i32data);
+					xQueueMbMqtt.flag32 = 1;
+				}else if (reg_temp != 2){ // with U16
+				    xQueueMbMqtt.RegData.i8data[1] = *(pucRegBuffer);  // byte 1
+					xQueueMbMqtt.RegData.i8data[0] = *(pucRegBuffer + 1);// byte 0
+					pusRegHoldingBuf[iRegIndex] = *pucRegBuffer++ << 8;
+					pusRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
+					iRegIndex++;
+					usNRegs--;
+					printf("\r\n- data read from U16: %d \r\n ",xQueueMbMqtt.RegData.i16data);
+				}
 			}
 			break;
 		}
+		for (uint8_t i = 0; i < num_device; i++){
+			if ((dynamic+i)->deviceID == xQueueMbMqtt.NodeID && (dynamic+i)->deviceChannel == xQueueMbMqtt.RegAdr.i16data && (dynamic+i)->func == xQueueMbMqtt.FunC ){
+				xQueueMbMqtt.scale = (dynamic+i)->scale;
+			}
+		}
+		printf("\r\n-------------\r\n");
 		xQueueMbMqtt.gotflagtelemetry = 2; // update count for device
 		BaseType_t Err = pdFALSE;
 		Err = xQueueSend(xQueueUplinkHandle, &xQueueMbMqtt,portDEFAULT_WAIT_TIME);
@@ -197,4 +236,203 @@ eMBErrorCode eMBMasterRegHoldingCB(UCHAR ucPort, UCHAR * pucRegBuffer, USHORT us
 	}
 	return eStatus;
 }
+eMBErrorCode eMBMasterRegCoilsCB( UCHAR ucPort,  UCHAR * pucRegBuffer, USHORT usAddress,USHORT usNCoils, eMBRegisterMode eMode ){
 
+				USHORT usMRegHoldStart = M_REG_COIL_START;
+				USHORT usMRegHoldBuf[MB_RS485_MAX_PORT][MB_MASTER_TOTAL_SLAVE_NUM][M_REG_COIL_NREGS];
+				eMBErrorCode eStatus = MB_ENOERR;
+				USHORT iRegIndex;
+				USHORT * pusRegHoldingBuf;
+				USHORT REG_HOLDING_START;
+				USHORT REG_HOLDING_NREGS;
+				USHORT usRegHoldStart;
+				USHORT REG_COIL_START = M_REG_COIL_START;
+				USHORT REG_COIL_NREGS = M_REG_COIL_NREGS;
+			/* FreeRTOS variable*/
+				xQueueMbMqtt_t xQueueMbMqtt;
+				xQueueMbMqtt.PortID = ucPort;
+				xQueueMbMqtt.NodeID = ucMBMasterGetDestAddress(ucPort);
+				/* if mode is read, the master will write the received date to buffer. */
+				usAddress--;
+				xQueueMbMqtt.RegAdr.i8data[0] = (uint8_t)usAddress;
+				xQueueMbMqtt.RegAdr.i8data[1] = (uint8_t)(usAddress >> 8);
+				if ((usAddress >= REG_COIL_START)&& ((uint8_t)usAddress + usNCoils <= REG_COIL_START + REG_COIL_NREGS)) {
+					iRegIndex = usAddress - REG_COIL_START;
+					switch (eMode) {
+					case MB_REG_READ:
+						xQueueMbMqtt.FunC = MB_FUNC_READ_COILS;
+						while (usNCoils> 0)
+						{
+						    //xQueueMbMqtt.RegData.i8data[1] = *(pucRegBuffer);  // byte 1
+							//xQueueMbMqtt.RegData.i8data[0] = *(pucRegBuffer + 1);// byte 0
+						    xQueueMbMqtt.RegData.i8data[1] = 0;
+							xQueueMbMqtt.RegData.i8data[0] = *(pucRegBuffer);
+							pusRegHoldingBuf[iRegIndex] = *pucRegBuffer++ << 8;
+							pusRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
+							iRegIndex++;
+							usNCoils--;
+							printf("\r\n- data read coil: %d \r\n ",xQueueMbMqtt.RegData.i16data);
+							//printf("\r\n - data read coil 1: %d\t%d\t%d\r\n ",xQueueMbMqtt.NodeID,xQueueMbMqtt.FunC, xQueueMbMqtt.RegData.i8data[0]);
+							//printf("\r\n - data read coil 0: %d\t%d\t%d\r\n ",xQueueMbMqtt.NodeID,xQueueMbMqtt.FunC, xQueueMbMqtt.RegData.i8data[1]);
+						}
+						break;
+					}
+
+//					#define portDEFAULT_WAIT_TIME 1000
+//					BaseType_t Err = pdFALSE;
+//					Err = xQueueSend(xQueueUplinkHandle, &xQueueMbMqtt,
+//							portDEFAULT_WAIT_TIME);
+//					if (Err == pdPASS) {
+//						printf("\r\n Modbus_MQTT Up queued: OK \r\n");
+//
+//					} else {
+//						printf("\r\n Modbus_MQTT Up queued: False \r\n");
+//					}
+				} else {
+					eStatus = MB_ENOREG;
+				}
+				return eStatus;
+}
+/************************Master Callback Function for Input Register****************/
+eMBErrorCode eMBMasterRegInputCB(UCHAR ucPort, UCHAR * pucRegBuffer, USHORT usAddress,USHORT usNRegs,eMBRegisterMode eMode)
+{
+	USHORT usMRegHoldStart = M_REG_INPUT_START;
+	USHORT usMRegHoldBuf[MB_RS485_MAX_PORT][MB_MASTER_TOTAL_SLAVE_NUM][M_REG_INPUT_NREGS];
+	eMBErrorCode eStatus = MB_ENOERR;
+	USHORT iRegIndex;
+	USHORT * pusRegHoldingBuf;
+	USHORT REG_INPUT_START;
+	USHORT REG_INPUT_NREGS;
+	USHORT usRegHoldStart;
+	REG_INPUT_START= M_REG_INPUT_START;
+	REG_INPUT_NREGS = M_REG_INPUT_NREGS;
+	/* FreeRTOS variable*/
+		xQueueMbMqtt_t xQueueMbMqtt;
+		xQueueMbMqtt.PortID = ucPort;
+		xQueueMbMqtt.NodeID = ucMBMasterGetDestAddress(ucPort);
+	/* if mode is read, the master will write the received date to buffer. */
+		usAddress--;
+		xQueueMbMqtt.RegAdr.i8data[0] = (uint8_t)usAddress;
+		xQueueMbMqtt.RegAdr.i8data[1] = (uint8_t)(usAddress >>8);
+		uint8_t reg_temp = usNRegs;
+		if ((usAddress >= REG_INPUT_START) && ((uint8_t)usAddress + usNRegs <= REG_INPUT_START + REG_INPUT_NREGS))
+		  {
+			iRegIndex =  usAddress - REG_INPUT_NREGS;
+			switch (eMode){
+			case MB_REG_READ:
+				xQueueMbMqtt.FunC = MB_FUNC_READ_INPUT_REGISTER;
+				while (usNRegs > 0)
+					{
+				    	xQueueMbMqtt.RegData.i8data[1] = *(pucRegBuffer);  // byte 1
+				    	xQueueMbMqtt.RegData.i8data[0] = *(pucRegBuffer + 1);// byte 0
+				    	pusRegHoldingBuf[iRegIndex] = *pucRegBuffer++ << 8;
+				    	pusRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
+				    	iRegIndex++;
+				    	usNRegs--;
+					}
+				break;
+			}
+
+			printf("\r\n - data read input: %d\t%d\t%d\r\n ",xQueueMbMqtt.NodeID,xQueueMbMqtt.FunC, xQueueMbMqtt.RegData.i16data);
+//			for (uint8_t i = 0; i < num_device; i++){
+//				if ((dynamic+i)->deviceID == xQueueMbMqtt.NodeID && (dynamic+i)->deviceChannel == xQueueMbMqtt.RegAdr.i16data && (dynamic+i)->func == xQueueMbMqtt.FunC ){
+//					xQueueMbMqtt.scale = (dynamic+i)->scale;
+//				}
+//			}
+//			printf("\r\n-------------\r\n");
+//			xQueueMbMqtt.gotflagtelemetry = 2; // update count for device
+//			BaseType_t Err = pdFALSE;
+//			Err = xQueueSend(xQueueUplinkHandle, &xQueueMbMqtt,portDEFAULT_WAIT_TIME);
+//			if (Err == pdPASS) {
+//				xQueueMbMqtt.gotflagtelemetry = 0;
+//				} else {
+//				printf("\r\n Modbus_MQTT Up queued: False \r\n");
+//			}
+		} else {
+			eStatus = MB_ENOREG;
+		}
+		return eStatus;
+}
+/************************Master Callback Function for Holding Register****************/
+//eMBErrorCode eMBMasterRegHoldingCB(UCHAR ucPort, UCHAR * pucRegBuffer, USHORT usAddress,USHORT usNRegs, eMBRegisterMode eMode) {
+//
+//	USHORT usMRegHoldStart = M_REG_HOLDING_START;
+//	USHORT usMRegHoldBuf[MB_RS485_MAX_PORT][MB_MASTER_TOTAL_SLAVE_NUM][M_REG_HOLDING_NREGS];
+//	eMBErrorCode eStatus = MB_ENOERR;
+//	USHORT iRegIndex;
+//	USHORT * pusRegHoldingBuf;
+//	USHORT REG_HOLDING_START;
+//	USHORT REG_HOLDING_NREGS;
+//	USHORT usRegHoldStart;
+//
+//	/* FreeRTOS variable*/
+//	xQueueMbMqtt_t xQueueMbMqtt;
+//	xQueueMbMqtt.PortID = ucPort;
+//	xQueueMbMqtt.NodeID = ucMBMasterGetDestAddress(ucPort);
+//
+//	pusRegHoldingBuf = usMRegHoldBuf[ucPort][ucMBMasterGetDestAddress(ucPort)- 1];
+//	REG_HOLDING_START = M_REG_HOLDING_START;
+//	REG_HOLDING_NREGS = M_REG_HOLDING_NREGS;
+//	usRegHoldStart = usMRegHoldStart;
+//	/* if mode is read, the master will write the received date to buffer. */
+////	eMode = MB_REG_READ; // don't sure this case
+//	/* it already plus one in modbus function method. Tao dell biet no inc lam gi de roi dec xuong */
+//	usAddress--;
+//	xQueueMbMqtt.RegAdr.i8data[0] = (uint8_t)usAddress;
+//	xQueueMbMqtt.RegAdr.i8data[1] = (uint8_t)(usAddress >>8);
+//	printf("\r\n- number of reg: %d \r\n ", usNRegs);
+//	uint8_t reg_temp = usNRegs;
+//	if ((usAddress >= REG_HOLDING_START)
+//			&& ((uint8_t)usAddress + usNRegs <= REG_HOLDING_START + REG_HOLDING_NREGS)) {
+//		iRegIndex = usAddress - usRegHoldStart;
+//		switch (eMode) {
+//		case MB_REG_READ:
+//			xQueueMbMqtt.FunC = MB_FUNC_READ_HOLDING_REGISTER;
+//			while (usNRegs > 0) {
+//				if (reg_temp == 2){ // with U32
+//					xQueueMbMqtt.RegData32.i8data[1] = *(pucRegBuffer);  // byte 1
+//					xQueueMbMqtt.RegData32.i8data[0] = *(pucRegBuffer + 1);// byte 0
+//					printf("\r\n- data byte 0: %d ", *(pucRegBuffer + 1));
+//					printf("\r\n- data byte 1: %d ", *(pucRegBuffer));
+//					pusRegHoldingBuf[iRegIndex] = *pucRegBuffer++ << 8;
+//					pusRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
+//					iRegIndex++;
+//					usNRegs--;
+//					xQueueMbMqtt.RegData32.i8data[3] = *(pucRegBuffer);  // byte 1
+//					xQueueMbMqtt.RegData32.i8data[2] = *(pucRegBuffer + 1);// byte 0
+//					printf("\r\n- data byte 2: %d ", *(pucRegBuffer + 1));
+//					printf("\r\n- data byte 3: %d ", *(pucRegBuffer));
+//					pusRegHoldingBuf[iRegIndex] = *pucRegBuffer++ << 8;
+//					pusRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
+//					iRegIndex++;
+//					usNRegs--;
+//					printf("\r\n- data read from cb: %d \r\n ", xQueueMbMqtt.RegData32.i32data);
+//					xQueueMbMqtt.flag32 = 1;
+//				}else if (reg_temp != 2){ // with U16
+//					xQueueMbMqtt.RegData.i8data[1] = *(pucRegBuffer);  // byte 1
+//					xQueueMbMqtt.RegData.i8data[0] = *(pucRegBuffer + 1);// byte 0
+//					pusRegHoldingBuf[iRegIndex] = *pucRegBuffer++ << 8;
+//					pusRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
+//					iRegIndex++;
+//					usNRegs--;
+//					printf("\r\n- data read from cb: %d \r\n ",xQueueMbMqtt.RegData.i16data);
+//				}
+//			}
+//			break;
+//		}
+////	#define portDEFAULT_WAIT_TIME 1000
+////		BaseType_t Err = pdFALSE;
+////		Err = xQueueSend(xQueueUplinkHandle, &xQueueMbMqtt,
+////				portDEFAULT_WAIT_TIME);
+////		if (Err == pdPASS) {
+////			xQueueMbMqtt.flag32 =  0;
+////			printf("\r\n Modbus_MQTT Up queued: OK \r\n");
+////		} else {
+////			printf("\r\n Modbus_MQTT Up queued: False \r\n");
+////		}
+//	}
+//	else {
+//		eStatus = MB_ENOREG;
+//	}
+//	return eStatus;
+//}

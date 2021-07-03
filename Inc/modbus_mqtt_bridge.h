@@ -13,7 +13,7 @@
 #define TEMP_JSON_LEN 		  50
 
 //#define ""
-
+extern char recordbuffer[1000];
 
 /* Public function prototype ----------------*/
 uint8_t mqtt_modbus_thread_down_provision(char *Buffer,uint16_t BufferLen);
