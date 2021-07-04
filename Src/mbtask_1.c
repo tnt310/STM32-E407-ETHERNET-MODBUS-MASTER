@@ -204,7 +204,7 @@ eMBErrorCode eMBMasterRegHoldingCB(UCHAR ucPort, UCHAR * pucRegBuffer, USHORT us
 					pusRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
 					iRegIndex++;
 					usNRegs--;
-					printf("\r\n- data read from U32: %d \r\n ", xQueueMbMqtt.RegData32.i32data);
+					//printf("\r\n- data read from U32: %d \r\n ", xQueueMbMqtt.RegData32.i32data);
 					xQueueMbMqtt.flag32 = 1;
 				}else if (reg_temp != 2){ // with U16
 				    xQueueMbMqtt.RegData.i8data[1] = *(pucRegBuffer);  // byte 1
@@ -213,7 +213,7 @@ eMBErrorCode eMBMasterRegHoldingCB(UCHAR ucPort, UCHAR * pucRegBuffer, USHORT us
 					pusRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
 					iRegIndex++;
 					usNRegs--;
-					printf("\r\n- data read from U16: %d \r\n ",xQueueMbMqtt.RegData.i16data);
+					//printf("\r\n- data read from U16: %d \r\n ",xQueueMbMqtt.RegData.i16data);
 				}
 			}
 			break;

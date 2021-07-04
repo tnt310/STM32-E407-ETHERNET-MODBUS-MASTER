@@ -71,10 +71,7 @@ uint32_t port1_baud,port1_stop,port1_databit,port1_parity;
 uint8_t num_device;
 static data1_t *ptr;
 data1_t test;
-
 data1_t *dynamic;
-static uint8_t counter = 0;
-static uint8_t telemetry = 0;
 uint8_t id_temp[2];
 uint8_t num_device;
 /* Start implementation ----------------------*/
@@ -350,6 +347,8 @@ static void mqtt_bridge_command_request_cb(void *arg, err_t result) {
 void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_topic, char* command_topic) {
 
 	uint8_t time[6];
+	static uint8_t counter = 0;
+	static uint8_t telemetry = 0;
 	BaseType_t Err = pdFALSE;
 	xQueueMbMqtt_t xQueueMbMqtt;
 	portCHAR head[MAX_JSON_LEN];
@@ -447,7 +446,7 @@ void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_top
 //				memset(tail,'\0',sizeof(tail));
 //				counter = 0;
 			}
-			else if (xQueueMbMqtt.gotflagLast == 2){
+			else if (xQueueMbMqtt.gotflagLast == 2) {
 				getTime(time);
 				timestamp_telemetry(head,time);
 				tail[strlen(tail) - 1] = '\0';
@@ -460,7 +459,6 @@ void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_top
 						//strcat(head,"\n");
 						//RecordData("record.txt",head);// write data to record.txt
 						//MX_LWIP_Init();
-
 					}else if (err == -1){
 						//strcat(head,"\n");
 						//RecordData("record.txt",head);// write data to record.txt
@@ -470,14 +468,11 @@ void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_top
 					memset(tail,'\0',sizeof(tail));
 					counter = 0;
 				}
-				else if (err == ERR_OK){
-
-				}
 				memset(head,'\0',sizeof(head));
 				memset(tail,'\0',sizeof(tail));
 				counter = 0;
 			}
-			else if (xQueueMbMqtt.gotflagtelemetry == 2) { // check telemetry
+			else if (xQueueMbMqtt.gotflagtelemetry == 2) {
 				if (xQueueMbMqtt.flag32 == 1){
 					xQueueMbMqtt.flag32 = 0;
 				    memset(res,'\0',sizeof(res));
@@ -492,7 +487,6 @@ void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_top
 					ftoa(ftoastr, res, xQueueMbMqtt.scale);
 					printf("\r\nTelemetry data reg16: %d \t %d \t %s\r\n",xQueueMbMqtt.NodeID,xQueueMbMqtt.RegAdr.i16data ,ftoastr);
 				}
-//			printf("\r\nTelemetry data: %d \t %d \t %d\r\n",xQueueMbMqtt.NodeID,xQueueMbMqtt.RegAdr.i16data ,xQueueMbMqtt.RegData.i16data);
 			counter ++;
 			if (counter == 1) {
 				id_temp[0] = xQueueMbMqtt.NodeID;
@@ -517,7 +511,7 @@ void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_top
 					telemetry = 1;
 					counter = 0;
 					//tail_telemetry(jsontempv1,xQueueMbMqtt.RegAdr.i16data, xQueueMbMqtt.RegData.i16data);
-					tail_telemetry(jsontemp,xQueueMbMqtt.RegAdr.i16data, ftoastr);
+					tail_telemetry(jsontempv1,xQueueMbMqtt.RegAdr.i16data, ftoastr);
 					tail[strlen(tail) - 1] = '\0';
 					strcat(tail,"},");
 				}

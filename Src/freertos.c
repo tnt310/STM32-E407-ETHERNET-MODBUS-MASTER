@@ -457,9 +457,6 @@ void StartDefaultTask(void const * argument)
 								f_gets((char*)SDbuffer, sizeof(SDbuffer), &fil);
 								ptr = parse_device((char*)SDbuffer, strlen(SDbuffer));
 								addDevice((dynamic+i), ptr);
-//								printf("\r\nLine %d: %d\t%d\t%d\t%d\t%d\t%s\t%s\t%s\t%s",i ,ptr->channel,ptr->deviceID,ptr->func,
-//										   ptr->deviceChannel,ptr->devicestatus,ptr->deviceType,ptr->deviceName,
-//								           ptr->channeltitle,ptr->valueType);
 							}
 						printf("\r\n");
 						fresult = f_close(&fil);
