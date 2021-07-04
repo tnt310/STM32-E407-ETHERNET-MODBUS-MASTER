@@ -353,13 +353,12 @@ eMBErrorCode eMBMasterRegInputCB(UCHAR ucPort, UCHAR * pucRegBuffer, USHORT usAd
 				break;
 			}
 
-			printf("\r\n - data read input: %d\t%d\t%d\r\n ",xQueueMbMqtt.NodeID,xQueueMbMqtt.FunC, xQueueMbMqtt.RegData.i16data);
+			//printf("\r\n - data read input: %d\t%d\t%d\r\n ",xQueueMbMqtt.NodeID,xQueueMbMqtt.FunC, xQueueMbMqtt.RegData.i16data);
 			for (uint8_t i = 0; i < num_device; i++){
 				if ((dynamic+i)->deviceID == xQueueMbMqtt.NodeID && (dynamic+i)->deviceChannel == xQueueMbMqtt.RegAdr.i16data && (dynamic+i)->func == xQueueMbMqtt.FunC ){
 					xQueueMbMqtt.scale = (dynamic+i)->scale;
 				}
 			}
-			printf("\r\n-------------\r\n");
 			xQueueMbMqtt.gotflagtelemetry = 2; // update count for device
 			BaseType_t Err = pdFALSE;
 			Err = xQueueSend(xQueueUplinkHandle, &xQueueMbMqtt,portDEFAULT_WAIT_TIME);
