@@ -9,7 +9,7 @@
 /* Public define*/
 #define JSON_MAX_LEN 200
 #define portDEFAULT_WAIT_TIME 1000
-#define MAX_JSON_LEN 		  1000
+#define MAX_JSON_LEN 		  3072
 #define TEMP_JSON_LEN 		  50
 
 //#define ""

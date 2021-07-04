@@ -234,7 +234,7 @@ void MX_FREERTOS_Init(void) {
 
   /* Create the thread(s) */
   /* definition and creation of defaultTask */
-  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 2048);
+  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 2000);
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
@@ -259,7 +259,7 @@ void StartDefaultTask(void const * argument)
 	/*Create Task Modules in this line*/
 
 	/*Modbus protocol stack*/
-	osThreadDef(mbProtocolTask, ModbusRTUTask, osPriorityNormal, 0, 8 * 128);
+	osThreadDef(mbProtocolTask, ModbusRTUTask, osPriorityNormal, 0, 4 * 128);
 	mbProtocolTask = osThreadCreate(osThread(mbProtocolTask), NULL);
 	printf("\r\n MemFree: %d", xPortGetFreeHeapSize());
 
@@ -274,7 +274,7 @@ void StartDefaultTask(void const * argument)
 	printf("\r\n MemFree: %d", xPortGetFreeHeapSize());
 
 	/*Get time*/
-	osThreadDef(netTimeTask, NetworkTimeTask, osPriorityNormal, 0, 5 * 128);
+	osThreadDef(netTimeTask, NetworkTimeTask, osPriorityNormal, 0, 4 * 128);
 	netTimeTask = osThreadCreate(osThread(netTimeTask), NULL);
 	printf("\r\n MemFree: %d", xPortGetFreeHeapSize());
 
@@ -356,25 +356,22 @@ void StartDefaultTask(void const * argument)
 			sysError = xQueueReceive(xQueueControlHandle, &xQueueControl,
 			portMAX_DELAY);
 			if (sysError == pdTRUE) {
-				if ((xQueueControl.xState == TASK_RUNNING)
-						&& (xQueueControl.xTask == mbDownlinkTask)) {
+				if ((xQueueControl.xState == TASK_RUNNING) && (xQueueControl.xTask == mbDownlinkTask)) {
 					printf("\r\n Starting mbDownlinkTask module: OK \r\n");
 					uiSysUpdate = TRUE;
 					uiSysState++;
-
 				}
 			} else {
 				printf("\r\n Starting mbDownlinkTask module: Responding Timeout \r\n");
 			}
 			break;
+
 		case SYS_NET_TIME:
 			#define portDEFAULT_DELAY 1000
 			printf("\r\n Starting netTimeTask");
-			sysError = xQueueReceive(xQueueControlHandle, &xQueueControl,
-			portDEFAULT_DELAY);
+			sysError = xQueueReceive(xQueueControlHandle, &xQueueControl, portDEFAULT_DELAY);
 			if (sysError == pdTRUE) {
-				if ((xQueueControl.xState == TASK_RUNNING)
-						&& (xQueueControl.xTask == netTimeTask)) {
+				if ((xQueueControl.xState == TASK_RUNNING) && (xQueueControl.xTask == netTimeTask)) {
 					printf("\r\n Starting netTimeTask  module: OK \r\n");
 					uiSysUpdate = TRUE;
 					uiSysState++;
@@ -388,8 +385,7 @@ void StartDefaultTask(void const * argument)
 		case SYS_CORE_DISCOV:
 			printf("\r\n Waiting for CORE discovery in %d ms:  \r\n",
 			portDEFAULT_DELAY);
-			sysError = xQueueReceive(xQueueControlHandle, &xQueueControl,
-			portDEFAULT_DELAY);
+			sysError = xQueueReceive(xQueueControlHandle, &xQueueControl, portDEFAULT_DELAY);
 			if (sysError == pdTRUE) {
 				if ((xQueueControl.xState == TASK_RUNNING)
 						&& (xQueueControl.xTask == netTcpEchoTask)) {
@@ -424,8 +420,7 @@ void StartDefaultTask(void const * argument)
 		case SYS_HTTP:
 			sysError = xQueueReceive(xQueueControlHandle, &xQueueControl,portMAX_DELAY);
 			if (sysError == pdTRUE) {
-				if ((xQueueControl.xState == TASK_RUNNING)
-						&& (xQueueControl.xTask == netHTTPTask)) {
+				if ((xQueueControl.xState == TASK_RUNNING) && (xQueueControl.xTask == netHTTPTask)) {
 					printf("\r\n Starting netHTTPTask module: OK \r\n");
 					uiSysUpdate = TRUE;
 					uiSysState++;
@@ -444,7 +439,7 @@ void StartDefaultTask(void const * argument)
 //			if (BSP_SD_Init() == MSD_OK)
 //				{
 					fresult = f_mount(&fs, "/", 1);
-					fresult = f_open(&fil,"sdio.txt", FA_READ);
+					fresult = f_open(&fil,"sim.txt", FA_READ);
 					for (line= 0; (f_eof(&fil) == 0); line++)
 						{
 							f_gets((char*)SDbuffer, sizeof(SDbuffer), &fil);
@@ -455,7 +450,7 @@ void StartDefaultTask(void const * argument)
 					dynamic = (data1_t*)pvPortMalloc(line * sizeof(data1_t));
 					if (dynamic != NULL){
 						fresult = f_mount(&fs, "/", 1);
-						fresult = f_open(&fil,"sdio.txt", FA_READ);
+						fresult = f_open(&fil,"sim.txt", FA_READ);
 						for (uint8_t i = 0; (f_eof(&fil) == 0); i++)
 							{
 								memset(SDbuffer,'\0',sizeof(SDbuffer));

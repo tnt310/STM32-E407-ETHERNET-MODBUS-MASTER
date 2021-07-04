@@ -56,6 +56,7 @@ typedef struct
 }network_param_t;
 
 extern uint32_t modbus_mutex;
+extern uint32_t modbus_telemetry;
 extern uint32_t mqtt_port;
 extern uint32_t timeDelay;
 uint32_t port0_baud,port0_stop,port0_databit,port0_parity;

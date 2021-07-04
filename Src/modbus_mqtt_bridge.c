@@ -40,6 +40,7 @@ network_param_t netParam;
 network_param_t mqttHostParam;
 uint32_t 		mqtt_port;
 uint32_t 		timeDelay; // timeout: 15s, 30s, 1p, 3p, 5p, 10p
+uint32_t 		modbus_telemetry;
 char *mqtt_id;
 char *mqtt_user;
 char *mqtt_password;
@@ -52,7 +53,7 @@ char buffer[100];
 char temp[20];
 char temp0[10];
 char temp1[20];
-char temp2[20];
+char temp2[30];
 char temp3[20];
 char ip_temp[20];
 char netmask_temp[20];
@@ -110,7 +111,7 @@ void parse_sdcardInfo(char *Buffer, uint16_t BufferLen)
 					ip4_addr_t ip;
 					if (ipaddr_aton(ip_temp, &ip)) {
 						netParam.ip.idata = ip.addr;
-						printf("\r\n New IP: %d %d %d %d", netParam.ip.cdata[0],netParam.ip.cdata[1], netParam.ip.cdata[2],netParam.ip.cdata[3]);
+						//printf("\r\n New IP: %d %d %d %d", netParam.ip.cdata[0],netParam.ip.cdata[1], netParam.ip.cdata[2],netParam.ip.cdata[3]);
 					}
 					j++;
 				}else if (jsoneq(Buffer, &t[j], "netmask") == 0){
@@ -120,7 +121,7 @@ void parse_sdcardInfo(char *Buffer, uint16_t BufferLen)
 					ip4_addr_t ip;
 					if (ipaddr_aton(netmask_temp, &ip)) {
 						netParam.netmask.idata = ip.addr;
-						printf("\r\n New Netmask: %d %d %d %d", netParam.netmask.cdata[0],netParam.netmask.cdata[1], netParam.netmask.cdata[2],netParam.netmask.cdata[3]);
+						//printf("\r\n New Netmask: %d %d %d %d", netParam.netmask.cdata[0],netParam.netmask.cdata[1], netParam.netmask.cdata[2],netParam.netmask.cdata[3]);
 					}
 					j++;
 				}else if (jsoneq(Buffer, &t[j], "gateway") == 0){
@@ -130,7 +131,7 @@ void parse_sdcardInfo(char *Buffer, uint16_t BufferLen)
 					ip4_addr_t ip;
 					if (ipaddr_aton(gateway_temp, &ip)) {
 						netParam.gateway.idata = ip.addr;
-						printf("\r\n New gateway: %d %d %d %d", netParam.gateway.cdata[0],netParam.gateway.cdata[1], netParam.gateway.cdata[2],netParam.gateway.cdata[3]);
+						//printf("\r\n New gateway: %d %d %d %d", netParam.gateway.cdata[0],netParam.gateway.cdata[1], netParam.gateway.cdata[2],netParam.gateway.cdata[3]);
 					}
 					j++;
 				}else if (jsoneq(Buffer, &t[j], "broker") == 0){
@@ -140,7 +141,7 @@ void parse_sdcardInfo(char *Buffer, uint16_t BufferLen)
 					ip4_addr_t ip;
 					if (ipaddr_aton(broker_temp, &ip)) {
 						mqttHostParam.ip.idata = ip.addr;
-						printf("\r\n New Broker IP: %d %d %d %d", mqttHostParam.ip.cdata[0],mqttHostParam.ip.cdata[1], mqttHostParam.ip.cdata[2],mqttHostParam.ip.cdata[3]);
+						//printf("\r\n New Broker IP: %d %d %d %d", mqttHostParam.ip.cdata[0],mqttHostParam.ip.cdata[1], mqttHostParam.ip.cdata[2],mqttHostParam.ip.cdata[3]);
 					}
 					j++;
 				}
@@ -150,19 +151,19 @@ void parse_sdcardInfo(char *Buffer, uint16_t BufferLen)
 			printf("\r\n - mqtt: %.*s\r\n", t[i + 1].end - t[i + 1].start,Buffer + t[i + 1].start);
 			for (uint8_t j = i; j < r-1; j++){
 				if (jsoneq(Buffer, &t[j], "mqttId") == 0){
-					printf("\r\n -mqttId: %.*s\r\n", t[j + 1].end - t[j + 1].start,Buffer + t[j + 1].start);
+					//printf("\r\n -mqttId: %.*s\r\n", t[j + 1].end - t[j + 1].start,Buffer + t[j + 1].start);
 					//char Id[20];
 					strncpy(Id,Buffer + t[j + 1].start, t[j + 1].end - t[j + 1].start);
 					mqtt_id = Id;
 					j++;
 				}else if (jsoneq(Buffer, &t[j], "username") == 0){
-					printf("\r\n -username: %.*s\r\n", t[j + 1].end - t[j + 1].start,Buffer + t[j + 1].start);
+					//printf("\r\n -username: %.*s\r\n", t[j + 1].end - t[j + 1].start,Buffer + t[j + 1].start);
 					//char user[20];
 					strncpy(user,Buffer + t[j + 1].start, t[j + 1].end - t[j + 1].start);
 					mqtt_user = user;
 					j++;
 				}else if (jsoneq(Buffer, &t[j], "pwd") == 0){
-					printf("\r\n -pwd: %.*s\r\n", t[j + 1].end - t[j + 1].start,Buffer + t[j + 1].start);
+					//printf("\r\n -pwd: %.*s\r\n", t[j + 1].end - t[j + 1].start,Buffer + t[j + 1].start);
 					//char passwork[20];
 					strncpy(passwork,Buffer + t[j + 1].start, t[j + 1].end - t[j + 1].start);
 					mqtt_password = passwork;
@@ -172,7 +173,7 @@ void parse_sdcardInfo(char *Buffer, uint16_t BufferLen)
 					u16_mqtt_port= atoi(Buffer + t[j + 1].start);
 					j++;
 				}else if (jsoneq(Buffer, &t[j], "apikey") == 0){
-					printf("\r\n -apikey: %.*s\r\n", t[j + 1].end - t[j + 1].start,Buffer + t[j + 1].start);
+					//printf("\r\n -apikey: %.*s\r\n", t[j + 1].end - t[j + 1].start,Buffer + t[j + 1].start);
 					//char key[30];
 					strncpy(key,Buffer + t[j + 1].start, t[j + 1].end - t[j + 1].start);
 					apikey = key;
@@ -184,16 +185,16 @@ void parse_sdcardInfo(char *Buffer, uint16_t BufferLen)
 			printf("\r\n - rs232: %.*s\r\n", t[i + 1].end - t[i + 1].start,Buffer + t[i + 1].start);
 			for (uint8_t j = i; j < r-1; j++){
 				if (jsoneq(Buffer, &t[j], "baud") == 0){
-					printf("\r\n -baud: %.*s\r\n", t[j + 1].end - t[j + 1].start,Buffer + t[j + 1].start);
+					//printf("\r\n -baud: %.*s\r\n", t[j + 1].end - t[j + 1].start,Buffer + t[j + 1].start);
 					j++;
 				}else if (jsoneq(Buffer, &t[j], "databits") == 0){
-					printf("\r\n -databits: %.*s\r\n", t[j + 1].end - t[j + 1].start,Buffer + t[j + 1].start);
+					//printf("\r\n -databits: %.*s\r\n", t[j + 1].end - t[j + 1].start,Buffer + t[j + 1].start);
 					j++;
 				}else if (jsoneq(Buffer, &t[j], "stopbits") == 0){
-					printf("\r\n -stopbits: %.*s\r\n", t[j + 1].end - t[j + 1].start,Buffer + t[j + 1].start);
+					//printf("\r\n -stopbits: %.*s\r\n", t[j + 1].end - t[j + 1].start,Buffer + t[j + 1].start);
 					j++;
 				}else if (jsoneq(Buffer, &t[j], "parity") == 0){
-					printf("\r\n -parity: %.*s\r\n", t[j + 1].end - t[j + 1].start,Buffer + t[j + 1].start);
+					//printf("\r\n -parity: %.*s\r\n", t[j + 1].end - t[j + 1].start,Buffer + t[j + 1].start);
 					j++;
 				}
 			}
@@ -202,19 +203,19 @@ void parse_sdcardInfo(char *Buffer, uint16_t BufferLen)
 			printf("\r\n - port0: %.*s\r\n", t[i + 1].end - t[i + 1].start,Buffer + t[i + 1].start);
 			for (uint8_t j = i; j < r-1; j++){
 				if (jsoneq(Buffer, &t[j], "baud") == 0){
-					printf("\r\n -baud: %.*s\r\n", t[j + 1].end - t[j + 1].start,Buffer + t[j + 1].start);
+					//printf("\r\n -baud: %.*s\r\n", t[j + 1].end - t[j + 1].start,Buffer + t[j + 1].start);
 					port0_baud = (uint32_t)atoi(Buffer + t[j + 1].start);
 					j++;
 				}else if (jsoneq(Buffer, &t[j], "databits") == 0){
-					printf("\r\n -databits: %.*s\r\n", t[j + 1].end - t[j + 1].start,Buffer + t[j + 1].start);
+					//printf("\r\n -databits: %.*s\r\n", t[j + 1].end - t[j + 1].start,Buffer + t[j + 1].start);
 					port0_databit = (uint32_t)atoi(Buffer + t[j + 1].start);
 					j++;
 				}else if (jsoneq(Buffer, &t[j], "stopbits") == 0){
-					printf("\r\n -stopbits: %.*s\r\n", t[j + 1].end - t[j + 1].start,Buffer + t[j + 1].start);
+					//printf("\r\n -stopbits: %.*s\r\n", t[j + 1].end - t[j + 1].start,Buffer + t[j + 1].start);
 					port0_stop = (uint32_t)atoi(Buffer + t[j + 1].start);
 					j++;
 				}else if (jsoneq(Buffer, &t[j], "parity") == 0){
-					printf("\r\n -parity: %.*s\r\n", t[j + 1].end - t[j + 1].start,Buffer + t[j + 1].start);
+					//printf("\r\n -parity: %.*s\r\n", t[j + 1].end - t[j + 1].start,Buffer + t[j + 1].start);
 					port0_parity = (uint32_t)atoi(Buffer + t[j + 1].start);
 					j++;
 				}
@@ -224,19 +225,19 @@ void parse_sdcardInfo(char *Buffer, uint16_t BufferLen)
 			printf("\r\n - port1: %.*s\r\n", t[i + 1].end - t[i + 1].start,Buffer + t[i + 1].start);
 			for (uint8_t j = i; j < r-1; j++){
 				if (jsoneq(Buffer, &t[j], "baud") == 0){
-					printf("\r\n -baud: %.*s\r\n", t[j + 1].end - t[j + 1].start,Buffer + t[j + 1].start);
+					//printf("\r\n -baud: %.*s\r\n", t[j + 1].end - t[j + 1].start,Buffer + t[j + 1].start);
 					port1_baud = (uint32_t)atoi(Buffer + t[j + 1].start);
 					j++;
 				}else if (jsoneq(Buffer, &t[j], "databits") == 0){
-					printf("\r\n -databits: %.*s\r\n", t[j + 1].end - t[j + 1].start,Buffer + t[j + 1].start);
+					//printf("\r\n -databits: %.*s\r\n", t[j + 1].end - t[j + 1].start,Buffer + t[j + 1].start);
 					port1_databit = (uint32_t)atoi(Buffer + t[j + 1].start);
 					j++;
 				}else if (jsoneq(Buffer, &t[j], "stopbits") == 0){
-					printf("\r\n -stopbits: %.*s\r\n", t[j + 1].end - t[j + 1].start,Buffer + t[j + 1].start);
+					//printf("\r\n -stopbits: %.*s\r\n", t[j + 1].end - t[j + 1].start,Buffer + t[j + 1].start);
 					port1_stop = (uint32_t)atoi(Buffer + t[j + 1].start);
 					j++;
 				}else if (jsoneq(Buffer, &t[j], "parity") == 0){
-					printf("\r\n -parity: %.*s\r\n", t[j + 1].end - t[j + 1].start,Buffer + t[j + 1].start);
+					//printf("\r\n -parity: %.*s\r\n", t[j + 1].end - t[j + 1].start,Buffer + t[j + 1].start);
 					port1_parity = (uint32_t)atoi(Buffer + t[j + 1].start);
 					j++;
 				}
@@ -245,6 +246,10 @@ void parse_sdcardInfo(char *Buffer, uint16_t BufferLen)
 		}else if (jsoneq(Buffer, &t[i], "timeout") == 0){
 			printf("\r\n - timeout: %.*s\r\n", t[i + 1].end - t[i + 1].start,Buffer + t[i + 1].start);
 			timeDelay = atoi(Buffer + t[i + 1].start);
+			break;
+		}else if (jsoneq(Buffer, &t[i], "telemetry") == 0){
+			//printf("\r\n - timeout: %.*s\r\n", t[i + 1].end - t[i + 1].start,Buffer + t[i + 1].start);
+			modbus_telemetry = atoi(Buffer + t[i + 1].start);
 			break;
 		}
 	}
@@ -407,16 +412,17 @@ void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_top
 					command_read_json(head, xQueueMbMqtt.NodeID, xQueueMbMqtt.RegAdr.i16data, xQueueMbMqtt.RegData.i16data);
 				else if (xQueueMbMqtt.FunC == 6)
 					command_write_json(head, xQueueMbMqtt.NodeID, xQueueMbMqtt.RegAdr.i16data);
-				err = mqtt_publish(client,command_topic, head,strlen(head), QOS_0, 0,mqtt_bridge_command_request_cb,NULL);
-				if (err != ERR_OK) {
-					printf("\r\n Publish command err: %d\n", err);
-					}
-				else if (err == ERR_OK){
-					xQueueMbMqtt.gotflagcommand = 0;
-				}
+				printf("\r\n T nhan dc roi ne cd: %s\r\n", head);
+//				err = mqtt_publish(client,command_topic, head,strlen(head), QOS_0, 0,mqtt_bridge_command_request_cb,NULL);
+//				if (err != ERR_OK) {
+//					printf("\r\n Publish command err: %d\n", err);
+//					}
+//				else if (err == ERR_OK){
+//					xQueueMbMqtt.gotflagcommand = 0;
+//				}
 			}/* --------------END OF SENDING COMAMND RESPONSE----------------------------------------------*/
 			else if (xQueueMbMqtt.gotflagLast == 1){ // send record data
-				printf("\r\n recordbuffer: %s\r\n",recordbuffer);
+				//printf("\r\n recordbuffer: %s\r\n",recordbuffer);
 //				strcat(head,recordbuffer);
 //				err = mqtt_publish(client, pub_topic,head,strlen(head), QOS_0, 0,mqtt_bridge_pub_request_cb,NULL);
 //				if (err != ERR_OK) {
@@ -679,72 +685,72 @@ uint8_t mqtt_modbus_thread_down_provision(char *Buffer,uint16_t BufferLen) {
 
 uint8_t mqtt_modbus_thread_down_command(char *pJsonMQTTBuffer,uint16_t pJsonMQTTBufferLen) {
 
-	int i;
-	int r;
-	jsmn_parser p;
-	jsmntok_t t[JSON_MAX_LEN]; /* We expect no more than JSON_MAX_LEN tokens */
-	jsmn_init(&p);
-	xQueueMbMqtt_t xQueueMbMqtt;
+	/*Parsing json by using clone source :) */
+		int i;
+		int r;
+		jsmn_parser p;
+		jsmntok_t t[JSON_MAX_LEN]; /* We expect no more than JSON_MAX_LEN tokens */
+		jsmn_init(&p);
+		xQueueMbMqtt_t xQueueMbMqtt;
 
-	r = jsmn_parse(&p, pJsonMQTTBuffer, pJsonMQTTBufferLen, t,
-			sizeof(t) / sizeof(t[0]));
-	if (r < 0) {
-		printf("Failed to parse JSON: %d\n", r);
-		return 1;
-	}
-
-	/* Assume the top-level element is an object */
-	if (r < 1 || t[0].type != JSMN_OBJECT) {
-		printf("Object expected\n");
-		return 1;
-	}
-	/* Loop over all keys of the root object */
-	for (i = 1; i < r; i++) {
-		if (jsoneq(pJsonMQTTBuffer, &t[i], "NodeID") == 0) {
-			/* We may use strndup() to fetch string value */
-			xQueueMbMqtt.NodeID = atoi(pJsonMQTTBuffer + t[i + 1].start);
-			i++;
-		} else if (jsoneq(pJsonMQTTBuffer, &t[i], "FunC") == 0) {
-			/* We may additionally check if the value is either "true" or "false" */
-			printf("\r\n - FunC: %.*s\n", t[i + 1].end - t[i + 1].start,pJsonMQTTBuffer + t[i + 1].start);
-			xQueueMbMqtt.FunC = atoi(pJsonMQTTBuffer + t[i + 1].start);
-			i++;
-		} else if (jsoneq(pJsonMQTTBuffer, &t[i], "RegAdrL") == 0) {
-			/* We may additionally check if the value is either "true" or "false" */
-			printf("\r\n - RegAdr: %.*s\n", t[i + 1].end - t[i + 1].start,pJsonMQTTBuffer + t[i + 1].start);
-			xQueueMbMqtt.RegAdr.i8data[0] = atoi(pJsonMQTTBuffer + t[i + 1].start);
-			i++;
-		} else if (jsoneq(pJsonMQTTBuffer, &t[i], "RegAdrH") == 0) {
-			/* We may additionally check if the value is either "true" or "false" */
-			printf("\r\n - RegData: %.*s\n", t[i + 1].end - t[i + 1].start,pJsonMQTTBuffer + t[i + 1].start);
-			xQueueMbMqtt.RegAdr.i8data[1] = atoi(pJsonMQTTBuffer + t[i + 1].start);
-			i++;
-		} else if (jsoneq(pJsonMQTTBuffer, &t[i], "RegDataL") == 0) {
-			printf("- RegAdr: %.*s\n", t[i + 1].end - t[i + 1].start,pJsonMQTTBuffer + t[i + 1].start);
-			xQueueMbMqtt.RegData.i8data[0] = atoi(pJsonMQTTBuffer + t[i + 1].start);
-			i++;
-		} else if (jsoneq(pJsonMQTTBuffer, &t[i], "RegDataH") == 0) {
-			/* We may additionally check if the value is either "true" or "false" */
-			printf("- RegData: %.*s\n", t[i + 1].end - t[i + 1].start,pJsonMQTTBuffer + t[i + 1].start);
-			xQueueMbMqtt.RegData.i8data[1] = atoi(pJsonMQTTBuffer + t[i + 1].start);
-
-			i++;
-		} else if (jsoneq(pJsonMQTTBuffer, &t[i], "PortID") == 0) {
-			/* We may additionally check if the value is either "true" or "false" */
-			printf("- PortID: %.*s\n", t[i + 1].end - t[i + 1].start,
-					pJsonMQTTBuffer + t[i + 1].start);
-			xQueueMbMqtt.PortID = atoi(pJsonMQTTBuffer + t[i + 1].start);
-
-			i++;
+		r = jsmn_parse(&p, pJsonMQTTBuffer, pJsonMQTTBufferLen, t,
+				sizeof(t) / sizeof(t[0]));
+		if (r < 0) {
+			printf("Failed to parse JSON: %d\n", r);
+			return 1;
 		}
 
-	}
-	BaseType_t Err = pdFALSE;
-	Err = xQueueSend(xQueueDownlinkHandle, &xQueueMbMqtt,portDEFAULT_WAIT_TIME);
-	if (Err == pdPASS) {
-		printf("\r\n Modbus_MQTT Downlink queued: OK \r\n");
+		/* Assume the top-level element is an object */
+		if (r < 1 || t[0].type != JSMN_OBJECT) {
+			printf("Object expected\n");
+			return 1;
+		}
+		/* Loop over all keys of the root object */
+		for (i = 1; i < r; i++) {
+			if (jsoneq(pJsonMQTTBuffer, &t[i], "NodeID") == 0) {
+				/* We may use strndup() to fetch string value */
+				xQueueMbMqtt.NodeID = atoi(pJsonMQTTBuffer + t[i + 1].start);
+				i++;
+			} else if (jsoneq(pJsonMQTTBuffer, &t[i], "FunC") == 0) {
+				/* We may additionally check if the value is either "true" or "false" */
+				printf("\r\n - FunC: %.*s\n", t[i + 1].end - t[i + 1].start,pJsonMQTTBuffer + t[i + 1].start);
+				xQueueMbMqtt.FunC = atoi(pJsonMQTTBuffer + t[i + 1].start);
+				i++;
+			} else if (jsoneq(pJsonMQTTBuffer, &t[i], "RegAdrL") == 0) {
+				/* We may additionally check if the value is either "true" or "false" */
+				printf("\r\n - RegAdr: %.*s\n", t[i + 1].end - t[i + 1].start,pJsonMQTTBuffer + t[i + 1].start);
+				xQueueMbMqtt.RegAdr.i8data[0] = atoi(pJsonMQTTBuffer + t[i + 1].start);
+				i++;
+			} else if (jsoneq(pJsonMQTTBuffer, &t[i], "RegAdrH") == 0) {
+				/* We may additionally check if the value is either "true" or "false" */
+				printf("\r\n - RegData: %.*s\n", t[i + 1].end - t[i + 1].start,pJsonMQTTBuffer + t[i + 1].start);
+				xQueueMbMqtt.RegAdr.i8data[1] = atoi(pJsonMQTTBuffer + t[i + 1].start);
+				i++;
+			} else if (jsoneq(pJsonMQTTBuffer, &t[i], "RegDataL") == 0) {
+				printf("- RegAdr: %.*s\n", t[i + 1].end - t[i + 1].start,pJsonMQTTBuffer + t[i + 1].start);
+				xQueueMbMqtt.RegData.i8data[0] = atoi(pJsonMQTTBuffer + t[i + 1].start);
+				i++;
+			} else if (jsoneq(pJsonMQTTBuffer, &t[i], "RegDataH") == 0) {
+				/* We may additionally check if the value is either "true" or "false" */
+				printf("- RegData: %.*s\n", t[i + 1].end - t[i + 1].start,pJsonMQTTBuffer + t[i + 1].start);
+				xQueueMbMqtt.RegData.i8data[1] = atoi(pJsonMQTTBuffer + t[i + 1].start);
 
-	} else {
-		printf("\r\n Modbus_MQTT Downlink queued: False \r\n");
-	}
+				i++;
+			} else if (jsoneq(pJsonMQTTBuffer, &t[i], "PortID") == 0) {
+				/* We may additionally check if the value is either "true" or "false" */
+				printf("- PortID: %.*s\n", t[i + 1].end - t[i + 1].start,
+						pJsonMQTTBuffer + t[i + 1].start);
+				xQueueMbMqtt.PortID = atoi(pJsonMQTTBuffer + t[i + 1].start);
+
+				i++;
+			}
+
+		}
+				BaseType_t Err = pdFALSE;
+				Err = xQueueSend(xQueueDownlinkHandle, &xQueueMbMqtt,portDEFAULT_WAIT_TIME);
+				if (Err == pdPASS) {
+					printf("\r\n Send Queu: OK \r\n");
+				} else {
+					printf("\r\n Modbus_MQTT Downlink queued: False \r\n");
+				}
 }

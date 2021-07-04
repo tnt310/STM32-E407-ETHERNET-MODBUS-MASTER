@@ -27,6 +27,7 @@ network_param_t netParam;
 network_param_t mqttHostParam;
 uint32_t 		netId;
 uint32_t 		modbus_mutex;
+uint32_t 		modbus_telemetry;
 uint32_t 		mqtt_port;
 uint32_t 		timeDelay; // timeout: 15s, 30s, 1p, 3p, 5p, 10p
 /* Start Implementation -----------------------------*/
@@ -150,7 +151,6 @@ void xFlashSave(void) {
 //	uiFlashSet(uiAdr += 4, (uint32_t*) &mqttHostParam.ip);
 //	uiFlashSet(uiAdr += 4, (uint32_t*) &mqttHostParam.netmask);
 //	uiFlashSet(uiAdr += 4, (uint32_t*) &mqttHostParam.gateway);
-
 
 
 	uiAdr = FLASH_MUTEX_ADDRESS  - MEM_TEMP_OFF;  // Modbus Mutex

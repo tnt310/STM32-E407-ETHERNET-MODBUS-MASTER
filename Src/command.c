@@ -36,6 +36,7 @@ char SDbuffer[200];
 
 uint32_t mqtt_port;
 uint32_t modbus_mutex;
+uint32_t modbus_telemetry;
 uint32_t timeDelay;
 uint32_t port0_baud,port0_stop,port0_databit,port0_parity;
 uint32_t port1_baud,port1_stop,port1_databit,port1_parity;
@@ -73,6 +74,8 @@ int Cmd_set_channelstatus(int argc, char *argv[]);
 int Cmd_delete_channel(int argc, char *argv[]);
 int Cmd_delete_line(int argc, char *argv[]);
 int Cmd_check_record(int argc, char *argv[]);
+int Cmd_list_test(int argc, char *argv[]);
+int Cmd_set_telemetry(int argc, char *argv[]);
 
 tCmdLineEntry g_psCmdTable[] = {
 		{ "checkrecord",Cmd_check_record," : Send provision request" },
@@ -81,6 +84,7 @@ tCmdLineEntry g_psCmdTable[] = {
 		{ "configtimeout",Cmd_set_timeout," : Send provision request" },
 		{ "configport0",Cmd_set_port0," : Send provision request" },
 		{ "configport1",Cmd_set_port1," : Send provision request" },
+		{ "configtelemetry",Cmd_set_telemetry," : Send provision request" },
 		{ "confignetwork",Cmd_set_network," : Send provision request" },
 		{ "configmqtt",Cmd_set_mqttInfo," : Send provision request" },
 		{ "gettime",Cmd_get_time," : Send provision request" },
@@ -102,6 +106,7 @@ tCmdLineEntry g_psCmdTable[] = {
 		{ "rm",Cmd_delete_file," : Send provision request" },
 		{ "nano",Cmd_read_file," : Send provision request" },
 		{ "ls",Cmd_list_file," : Send provision request" },
+		{ "test",Cmd_list_test," : Send provision request" },
 
 		{ 0, 0, 0 } };
 
@@ -465,6 +470,7 @@ int Cmd_set_mutex(int argc, char *argv[])
 	uint32_t handle = 1;
 	xQueueSend(xQueueResetHandle,&handle,portMAX_DELAY);
 	}
+
 /*----------------------OFF MUTEX FOR MBTASK-------------------------------------------------------------------------*/
 int Cmd_off_mutex(int argc, char *argv[]) {
 	printf("\nCmd_off_telemetry\r\n");
@@ -594,7 +600,15 @@ int Cmd_set_timeout(int argc, char *argv[]) // timeout: 15s, 30s, 1p, 3p, 5p, 10
 	char buffer[20];
 	SD_timeout(buffer,timeout);
 	printf("\r\n timeout is set: %s\r\n",buffer);
-	overwrite_file("test.txt",buffer, 4);
+	overwrite_file("config.txt",buffer, 4);
+}
+int Cmd_set_telemetry(int argc, char *argv[])
+{
+	uint8_t telemetry= atoi(*(argv+1));
+	char buffer[20];
+	SD_telemetry(buffer, telemetry);
+	printf("\r\n telemetry is set: %s\r\n",buffer);
+	overwrite_file("config.txt",buffer, 5);
 }
 int Cmd_set_port0(int argc, char *argv[]) // timeout: 15s, 30s, 1p, 3p, 5p, 10p
 {
@@ -605,7 +619,7 @@ int Cmd_set_port0(int argc, char *argv[]) // timeout: 15s, 30s, 1p, 3p, 5p, 10p
 	char buffer[100];
 	SD_Serial(buffer,2, baud,dbbits, stops, parity);
 	printf("\r\n port0 is set: %s\r\n",buffer);
-	overwrite_file("test.txt",buffer, 2);
+	overwrite_file("config.txt",buffer, 2);
 }
 int Cmd_set_port1(int argc, char *argv[]) // timeout: 15s, 30s, 1p, 3p, 5p, 10p
 {
@@ -616,7 +630,7 @@ int Cmd_set_port1(int argc, char *argv[]) // timeout: 15s, 30s, 1p, 3p, 5p, 10p
 	char buffer[100];
 	SD_Serial(buffer,3, baud,dbbits, stops, parity);
 	printf("\r\n port1 is set: %s\r\n",buffer);
-	overwrite_file("test.txt",buffer, 3);
+	overwrite_file("config.txt",buffer, 3);
 }
 int Cmd_set_network(int argc, char *argv[]) // timeout: 15s, 30s, 1p, 3p, 5p, 10p
 {
@@ -627,7 +641,7 @@ int Cmd_set_network(int argc, char *argv[]) // timeout: 15s, 30s, 1p, 3p, 5p, 10
 	char buffer[200];
 	SD_Network(buffer, ip, netmask, gateway, broker);
 	printf("\r\n network is set: %s\r\n",buffer);
-	overwrite_file("test.txt",buffer, 0);
+	overwrite_file("config.txt",buffer, 0);
 }
 int Cmd_set_mqttInfo(int argc, char *argv[]) // timeout: 15s, 30s, 1p, 3p, 5p, 10p
 {
@@ -639,8 +653,9 @@ int Cmd_set_mqttInfo(int argc, char *argv[]) // timeout: 15s, 30s, 1p, 3p, 5p, 1
 	char buffer[200];
 	SD_Mqtt(buffer, port,id, username, pwd, apikey);
 	printf("\r\n mqttInfo is set: %s\r\n",buffer);
-	overwrite_file("test.txt",buffer, 1);
+	overwrite_file("config.txt",buffer, 1);
 }
+
 /*---------------------------SAVE------------------------------------------------------------------------------*/
 int Cmd_save(int argc, char *argv[]) {
 
@@ -744,4 +759,11 @@ void ftoa(char buffer[20], char string[20], uint16_t scale)
 		buffer[strlen(string) - 1] = temp1; //4
 		buffer[strlen(string)] = temp2;  // 5
 	}
+}
+int Cmd_list_test(int argc, char *argv[])
+{
+	printf("\nCmd_list_test\r\n");
+	printf("------------------\r\n");
+	uint16_t temp = (uint16_t)strtol(*(argv+1), NULL, 0);
+	printf("\nstrtol: %d\r\n", temp);
 }

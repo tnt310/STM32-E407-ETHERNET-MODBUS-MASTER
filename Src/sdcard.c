@@ -47,5 +47,8 @@ uint8_t SD_timeout(char buffer[50],uint16_t timeout)
     memset(buffer,'\0',sizeof(buffer));
     sprintf(buffer,"{\"timeout\":%d}\n",timeout);
 }
-
+uint8_t SD_telemetry(char buffer[20], uint8_t telemetry)
+{
+    sprintf(buffer,"{\"telemetry\":%d}\n",telemetry);
+}
 

@@ -31,6 +31,7 @@
 #include "lwip/ip_addr.h"
 uint32_t mqtt_port;
 uint32_t modbus_mutex;
+uint32_t modbus_telemetry;
 uint32_t timeDelay;
 char *mqtt_id;
 char *mqtt_user;
@@ -141,7 +142,7 @@ void MX_LWIP_Init(void)
 	printf("\r\n MQTT_PASSWORK       	: %s",mqtt_password);
 	printf("\r\n APIKEY       			: %s",apikey);
 	printf("\r\n MQTT BROKER PORT       : %d",u16_mqtt_port);
-	printf("\r\n MODBUS MUTEX       	: %d",modbus_mutex);
+	printf("\r\n MODBUS TELEMETRY       : %d", modbus_telemetry);
 	printf("\r\n TIME DELAY      		: %d",timeDelay);
 	printf("\r\n PORT 0: BAUD: %d, DATABITS: %d, STOPBIT: %d, PARITY: %d",port0_baud, port0_databit, port0_stop, port0_parity);
 	printf("\r\n PORT 1: BAUD: %d, DATABITS: %d, STOPBIT: %d, PARITY: %d",port1_baud, port1_databit, port1_stop, port1_parity);
