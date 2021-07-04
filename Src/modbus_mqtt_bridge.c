@@ -47,6 +47,7 @@ char *mqtt_password;
 char *apikey;
 uint16_t u16_mqtt_port;
 char recordbuffer[1000];
+
 /* Private Variables -------------------------*/
 uint8_t mqtt_couter_err = 0;
 char buffer[100];
@@ -577,9 +578,8 @@ void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_top
 /*-------------------------------------PROVISION DOWNSTREAM AND COMMAND DOWNSTREAM---------------------------------------------------------------------------------------*/
 uint8_t mqtt_modbus_thread_down_provision(char *Buffer,uint16_t BufferLen) {
 
-		//printf("\r\n NUMBER OF DEVICE: %d\r\n",num_device);
 		uint8_t  deviceID ,channelStatus;
-		uint16_t channel_id;
+		uint16_t channelID;
 		int r;
 		jsmn_parser p;
 		jsmntok_t t[JSON_MAX_LEN]; /* We exect no morep than JSON_MAX_LEN tokens */
@@ -595,30 +595,29 @@ uint8_t mqtt_modbus_thread_down_provision(char *Buffer,uint16_t BufferLen) {
 			return 1;
 		}
 		for (uint8_t i = 0; i < r-1; i++) {
-			printf("\r\n -value: %.*s\r\n", t[i + 1].end - t[i + 1].start,Buffer + t[i + 1].start);
-//			if (i == 2){
-//				deviceID = atoi(Buffer + t[i + 1].start);
-//			}else if (i == 5){
-//				//printf("\r\n - channelID: %.*s\r\n", t[i + 1].end - t[i + 1].start,Buffer + t[i + 1].start);
-//			}
-//			else if ( i == 6){
-//				for (uint8_t j = i; j < r-1; j++){
-//					if(j % 2 == 0){
-//						channel_id = atoi(Buffer + t[j + 1].start);
-//					}
-//					else if (j %2 != 0){
-//						channelStatus = atoi(Buffer + t[j + 1].start);
-//						for (uint8_t m = 0; m < num_device; m++){
-//							if( (dynamic+m)->deviceID == deviceID && (dynamic+m)->deviceChannel == channel_id){
-//								//(dynamic+m)->devicestatus = channelStatus;
-//								printf("\r\n - deviceID %d \t channelID: %d \t channelstatus: %d\r\n",deviceID,channel_id,channelStatus);
-//							}
-//						}
-//					}
-//				}
-//			}
+			//printf("\r\n -value: %.*s\r\n", t[i + 1].end - t[i + 1].start,Buffer + t[i + 1].start);
+			if (i == 2){
+				deviceID = atoi(Buffer + t[i + 1].start);
+			}else if (i == 6){
+				for (uint8_t j = i; j < r-1; j++){
+					if(j % 2 == 0){
+						channelID = (uint16_t)atoi(Buffer + t[j + 1].start);
+						//printf("\r\n -channelID oiu: %d\r\n",channelID);
+					}
+					else if (j %2 != 0){
+						channelStatus = atoi(Buffer + t[j + 1].start);
+						for (uint8_t m = 0; m < num_device; m++){
+							if( (dynamic+m)->deviceID == deviceID && (dynamic+m)->deviceChannel == channelID){
+								//(dynamic+m)->devicestatus = channelStatus;
+								printf("\r\n - deviceID %d \t channelID: %d \t channelstatus: %d\r\n",deviceID,channelID,channelStatus);
+							}
+						}
+					}
+				}
+			}
 
 		}
+		//printf("\r\n - deviceID %d \t channelID: %d \t channelstatus: %d\r\n",deviceID,channelID,channelStatus);
 }
 uint8_t mqtt_modbus_thread_down_command(char *pJsonMQTTBuffer,uint16_t pJsonMQTTBufferLen) {
 
