@@ -407,18 +407,31 @@ void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_top
 					}
 				}/* --------------END OF SENDING PROVISION---------------------------------------------------------------------*/
 			else if (xQueueMbMqtt.gotflagcommand == 3){  // check command
-				if (xQueueMbMqtt.FunC == 3)
-					command_read_json(head, xQueueMbMqtt.NodeID, xQueueMbMqtt.RegAdr.i16data, xQueueMbMqtt.RegData.i16data);
+				if (xQueueMbMqtt.FunC == 3){
+					if (xQueueMbMqtt.flag32 == 1){
+						xQueueMbMqtt.flag32 = 0;
+					    memset(res,'\0',sizeof(res));
+					    memset(ftoastr,'\0',sizeof(ftoastr));
+						sprintf(res,"%d",xQueueMbMqtt.RegData32.i32data);
+						ftoa(ftoastr, res, xQueueMbMqtt.scale);
+						command_read_json(head, xQueueMbMqtt.NodeID, xQueueMbMqtt.RegAdr.i16data,ftoastr);
+					}else{
+					    memset(res,'\0',sizeof(res));
+					    memset(ftoastr,'\0',sizeof(ftoastr));
+						sprintf(res,"%d",xQueueMbMqtt.RegData.i16data);
+						ftoa(ftoastr, res, xQueueMbMqtt.scale);
+						command_read_json(head, xQueueMbMqtt.NodeID, xQueueMbMqtt.RegAdr.i16data,ftoastr);
+					}
+				}
 				else if (xQueueMbMqtt.FunC == 6)
 					command_write_json(head, xQueueMbMqtt.NodeID, xQueueMbMqtt.RegAdr.i16data);
-				printf("\r\n T nhan dc roi ne cd: %s\r\n", head);
-//				err = mqtt_publish(client,command_topic, head,strlen(head), QOS_0, 0,mqtt_bridge_command_request_cb,NULL);
-//				if (err != ERR_OK) {
-//					printf("\r\n Publish command err: %d\n", err);
-//					}
-//				else if (err == ERR_OK){
-//					xQueueMbMqtt.gotflagcommand = 0;
-//				}
+				err = mqtt_publish(client,command_topic, head,strlen(head), QOS_0, 0,mqtt_bridge_command_request_cb,NULL);
+				if (err != ERR_OK) {
+					printf("\r\n Publish command err: %d\n", err);
+					}
+				else if (err == ERR_OK){
+					xQueueMbMqtt.gotflagcommand = 0;
+				}
 			}/* --------------END OF SENDING COMAMND RESPONSE----------------------------------------------*/
 			else if (xQueueMbMqtt.gotflagLast == 1){ // send record data
 				//printf("\r\n recordbuffer: %s\r\n",recordbuffer);
@@ -607,88 +620,15 @@ uint8_t mqtt_modbus_thread_down_provision(char *Buffer,uint16_t BufferLen) {
 
 		}
 }
-//uint8_t mqtt_modbus_thread_down_command(char *pJsonMQTTBuffer,uint16_t pJsonMQTTBufferLen) {
-//
-//		int r;
-//		jsmn_parser p;
-//		jsmntok_t t[JSON_MAX_LEN]; /* We expect no more than JSON_MAX_LEN tokens */
-//		jsmn_init(&p);
-//		xQueueMbMqtt_t xQueueMbMqtt;
-//		r = jsmn_parse(&p, pJsonMQTTBuffer, pJsonMQTTBufferLen, t,sizeof(t) / sizeof(t[0]));
-//		if (r < 0) {
-//			printf("Failed to parse JSON: %d\n", r);
-//			return 1;
-//		}
-//
-//		/* Assume the top-level element is an object */
-//		if (r < 1 || t[0].type != JSMN_OBJECT) {
-//			printf("Object expected\n");
-//			return 1;
-//		}
-//		for (uint8_t i = 1; i < r; i++) {
-//			if (jsoneq(pJsonMQTTBuffer, &t[i], "device_id") == 0) {
-//				printf("\r\n - device_id: %.*s\n", t[i + 1].end - t[i + 1].start,pJsonMQTTBuffer + t[i + 1].start);
-//				xQueueMbMqtt.NodeID = atoi(pJsonMQTTBuffer + t[i + 1].start);
-//				i++;
-//			}
-//			else if (jsoneq(pJsonMQTTBuffer, &t[i], "channel_id") == 0) {
-//				printf("\r\n - channel_id: %.*s\n", t[i + 1].end - t[i + 1].start,pJsonMQTTBuffer + t[i + 1].start);
-//				xQueueMbMqtt.RegAdr.i16data = atoi(pJsonMQTTBuffer + t[i + 1].start);
-//				i++;
-//			}
-//			else if (jsoneq(pJsonMQTTBuffer, &t[i], "command") == 0) {
-//				uint8_t command = 0;
-//				char cmd[20];
-//				printf("\r\n - command: %.*s\n", t[i + 1].end - t[i + 1].start,pJsonMQTTBuffer + t[i + 1].start);
-//				strncpy(cmd, pJsonMQTTBuffer + t[i + 1].start, t[i + 1].end - t[i + 1].start);
-//				if (strstr(cmd,"read") != NULL){
-//					command = 3;
-//					uint16_t value = 1;
-//					xQueueMbMqtt.RegData.i8data[0] = (uint8_t)value;
-//					xQueueMbMqtt.RegData.i8data[1] = (uint8_t)(value >> 8);
-//				}
-//				else if (strstr(cmd,"write") != NULL)
-//					command = 6;
-//				xQueueMbMqtt.FunC = command;
-//				i++;
-//			}
-//			else if (jsoneq(pJsonMQTTBuffer, &t[i], "value") == 0) {
-//				uint16_t value = 0;
-//				char val[10];
-//				printf("\r\n - value: %.*s\n", t[i + 1].end - t[i + 1].start,pJsonMQTTBuffer + t[i + 1].start);
-//				strncpy(val, pJsonMQTTBuffer + t[i + 1].start, t[i + 1].end - t[i + 1].start);
-//				if (strstr(val,"true") != NULL || strstr(val,"on") != NULL)
-//					value = 1;
-//				else if (strstr(val,"false") != NULL || strstr(val,"off") != NULL)
-//					value = 0;
-//				else
-//					value = atoi(pJsonMQTTBuffer + t[i + 1].start);
-//				xQueueMbMqtt.RegData.i8data[0] = (uint8_t)value;
-//				xQueueMbMqtt.RegData.i8data[1] = (uint8_t)(value >> 8);
-//				i++;
-//			}
-//		}
-//		BaseType_t Err = pdFALSE;
-//		Err = xQueueSend(xQueueDownlinkHandle, &xQueueMbMqtt,portDEFAULT_WAIT_TIME);
-//		if (Err == pdPASS) {
-//			memset(pJsonMQTTBuffer,'\0',pJsonMQTTBufferLen);
-//		} else {
-//			printf("\r\n Modbus_MQTT Downlink queued: False \r\n");
-//		}
-//}
-
 uint8_t mqtt_modbus_thread_down_command(char *pJsonMQTTBuffer,uint16_t pJsonMQTTBufferLen) {
 
-	/*Parsing json by using clone source :) */
-		int i;
 		int r;
+		uint16_t value = 0;
 		jsmn_parser p;
 		jsmntok_t t[JSON_MAX_LEN]; /* We expect no more than JSON_MAX_LEN tokens */
 		jsmn_init(&p);
 		xQueueMbMqtt_t xQueueMbMqtt;
-
-		r = jsmn_parse(&p, pJsonMQTTBuffer, pJsonMQTTBufferLen, t,
-				sizeof(t) / sizeof(t[0]));
+		r = jsmn_parse(&p, pJsonMQTTBuffer, pJsonMQTTBufferLen, t,sizeof(t) / sizeof(t[0]));
 		if (r < 0) {
 			printf("Failed to parse JSON: %d\n", r);
 			return 1;
@@ -699,52 +639,55 @@ uint8_t mqtt_modbus_thread_down_command(char *pJsonMQTTBuffer,uint16_t pJsonMQTT
 			printf("Object expected\n");
 			return 1;
 		}
-		/* Loop over all keys of the root object */
-		for (i = 1; i < r; i++) {
-			if (jsoneq(pJsonMQTTBuffer, &t[i], "NodeID") == 0) {
-				/* We may use strndup() to fetch string value */
+		for (uint8_t i = 1; i < r; i++) {
+			if (jsoneq(pJsonMQTTBuffer, &t[i], "device_id") == 0) {
+				//printf("\r\n - device_id: %.*s\n", t[i + 1].end - t[i + 1].start,pJsonMQTTBuffer + t[i + 1].start);
 				xQueueMbMqtt.NodeID = atoi(pJsonMQTTBuffer + t[i + 1].start);
 				i++;
-			} else if (jsoneq(pJsonMQTTBuffer, &t[i], "FunC") == 0) {
-				/* We may additionally check if the value is either "true" or "false" */
-				printf("\r\n - FunC: %.*s\n", t[i + 1].end - t[i + 1].start,pJsonMQTTBuffer + t[i + 1].start);
-				xQueueMbMqtt.FunC = atoi(pJsonMQTTBuffer + t[i + 1].start);
-				i++;
-			} else if (jsoneq(pJsonMQTTBuffer, &t[i], "RegAdrL") == 0) {
-				/* We may additionally check if the value is either "true" or "false" */
-				printf("\r\n - RegAdr: %.*s\n", t[i + 1].end - t[i + 1].start,pJsonMQTTBuffer + t[i + 1].start);
-				xQueueMbMqtt.RegAdr.i8data[0] = atoi(pJsonMQTTBuffer + t[i + 1].start);
-				i++;
-			} else if (jsoneq(pJsonMQTTBuffer, &t[i], "RegAdrH") == 0) {
-				/* We may additionally check if the value is either "true" or "false" */
-				printf("\r\n - RegData: %.*s\n", t[i + 1].end - t[i + 1].start,pJsonMQTTBuffer + t[i + 1].start);
-				xQueueMbMqtt.RegAdr.i8data[1] = atoi(pJsonMQTTBuffer + t[i + 1].start);
-				i++;
-			} else if (jsoneq(pJsonMQTTBuffer, &t[i], "RegDataL") == 0) {
-				printf("- RegAdr: %.*s\n", t[i + 1].end - t[i + 1].start,pJsonMQTTBuffer + t[i + 1].start);
-				xQueueMbMqtt.RegData.i8data[0] = atoi(pJsonMQTTBuffer + t[i + 1].start);
-				i++;
-			} else if (jsoneq(pJsonMQTTBuffer, &t[i], "RegDataH") == 0) {
-				/* We may additionally check if the value is either "true" or "false" */
-				printf("- RegData: %.*s\n", t[i + 1].end - t[i + 1].start,pJsonMQTTBuffer + t[i + 1].start);
-				xQueueMbMqtt.RegData.i8data[1] = atoi(pJsonMQTTBuffer + t[i + 1].start);
-
-				i++;
-			} else if (jsoneq(pJsonMQTTBuffer, &t[i], "PortID") == 0) {
-				/* We may additionally check if the value is either "true" or "false" */
-				printf("- PortID: %.*s\n", t[i + 1].end - t[i + 1].start,
-						pJsonMQTTBuffer + t[i + 1].start);
-				xQueueMbMqtt.PortID = atoi(pJsonMQTTBuffer + t[i + 1].start);
-
+			}
+			else if (jsoneq(pJsonMQTTBuffer, &t[i], "channel_id") == 0) {
+				//printf("\r\n - channel_id: %.*s\n", t[i + 1].end - t[i + 1].start,pJsonMQTTBuffer + t[i + 1].start);
+				xQueueMbMqtt.RegAdr.i16data = atoi(pJsonMQTTBuffer + t[i + 1].start);
 				i++;
 			}
-
-		}
-				BaseType_t Err = pdFALSE;
-				Err = xQueueSend(xQueueDownlinkHandle, &xQueueMbMqtt,portDEFAULT_WAIT_TIME);
-				if (Err == pdPASS) {
-					printf("\r\n Send Queu: OK \r\n");
-				} else {
-					printf("\r\n Modbus_MQTT Downlink queued: False \r\n");
+			else if (jsoneq(pJsonMQTTBuffer, &t[i], "command") == 0) {
+				char cmd[20];
+				//printf("\r\n - command: %.*s\n", t[i + 1].end - t[i + 1].start,pJsonMQTTBuffer + t[i + 1].start);
+				strncpy(cmd, pJsonMQTTBuffer + t[i + 1].start, t[i + 1].end - t[i + 1].start);
+				if (strstr(cmd,"read") != NULL){
+					xQueueMbMqtt.FunC = 3;
+					uint16_t value = 1;
+					xQueueMbMqtt.RegData.i8data[0] = (uint8_t)value;
+					xQueueMbMqtt.RegData.i8data[1] = (uint8_t)(value >> 8);
 				}
+				else if (strstr(cmd,"write") != NULL){
+					xQueueMbMqtt.FunC = 6;
+					i++;
+				}
+
+			}
+			else if (jsoneq(pJsonMQTTBuffer, &t[i], "value") == 0) {
+				char val[10];
+				//printf("\r\n - value: %.*s\n", t[i + 1].end - t[i + 1].start,pJsonMQTTBuffer + t[i + 1].start);
+				strncpy(val, pJsonMQTTBuffer + t[i + 1].start, t[i + 1].end - t[i + 1].start);
+				if (strstr(val,"true") != NULL || strstr(val,"on") != NULL)
+					value = 1;
+				else if (strstr(val,"false") != NULL || strstr(val,"off") != NULL)
+					value = 0;
+				else
+					value = atoi(pJsonMQTTBuffer + t[i + 1].start);
+				xQueueMbMqtt.RegData.i8data[0] = (uint8_t)value;
+				xQueueMbMqtt.RegData.i8data[1] = (uint8_t)(value >> 8);
+				i++;
+			}
+		}
+		printf("\r\n command: %d\t%d\t%d\t%d\r\n",xQueueMbMqtt.NodeID,xQueueMbMqtt.RegAdr.i16data,xQueueMbMqtt.FunC,value);
+		BaseType_t Err = pdFALSE;
+		Err = xQueueSend(xQueueDownlinkHandle, &xQueueMbMqtt,portDEFAULT_WAIT_TIME);
+		if (Err == pdPASS) {
+			memset(pJsonMQTTBuffer,'\0',pJsonMQTTBufferLen);
+		} else {
+			printf("\r\n Modbus_MQTT Downlink queued: False \r\n");
+		}
 }
+

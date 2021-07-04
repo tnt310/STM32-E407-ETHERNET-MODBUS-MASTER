@@ -63,10 +63,10 @@ uint8_t head_telemetry(char *buffer, uint8_t device_id)
 //    sprintf(buffer,"\"%d\":%d,",device_channel, value);
 //}
 /*---------------------------------------------------------------------------------------------------------------------------------------*/
-uint8_t command_read_json(char *buffer,uint8_t device_id, uint16_t device_channel,uint16_t value)
+uint8_t command_read_json(char *buffer,uint8_t device_id, uint16_t device_channel,char *value)
 {
     memset(buffer,0,sizeof(buffer));
-    sprintf(buffer,"{\"data\":{\"%d\":{\"%d\":%d}}}",device_id,device_channel,value);
+    sprintf(buffer,"{\"data\":{\"%d\":{\"%d\":%s}}}",device_id,device_channel,value);
 }
 uint8_t command_write_json(char *buffer,uint8_t device_id, uint16_t device_channel)
 {

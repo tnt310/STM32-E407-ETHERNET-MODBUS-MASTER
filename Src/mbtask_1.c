@@ -32,8 +32,9 @@ uint8_t num_device;
 extern uint32_t modbus_mutex;
 extern uint32_t modbus_telemetry;
 extern uint32_t timeDelay;
+volatile uint8_t read_mutex;
+volatile uint8_t write_mutex;
 static uint8_t count = 0;
-uint8_t main_mutex;
 /* Private variables ---------------------------------------------------------*/
 
 #define M_REG_HOLDING_START            0
@@ -179,7 +180,6 @@ eMBErrorCode eMBMasterRegHoldingCB(UCHAR ucPort, UCHAR * pucRegBuffer, USHORT us
 	xQueueMbMqtt.RegAdr.i8data[0] = (uint8_t)usAddress;
 	xQueueMbMqtt.RegAdr.i8data[1] = (uint8_t)(usAddress >> 8);
 	uint8_t reg_temp = usNRegs;
-	uint8_t command_mutex = 0;
 	if ((usAddress >= REG_HOLDING_START)&& ((uint8_t)usAddress + usNRegs <= REG_HOLDING_START + REG_HOLDING_NREGS)) {
 		iRegIndex = usAddress - REG_HOLDING_START;
 		switch (eMode) {
@@ -216,6 +216,9 @@ eMBErrorCode eMBMasterRegHoldingCB(UCHAR ucPort, UCHAR * pucRegBuffer, USHORT us
 					//printf("\r\n- data read from U16: %d \r\n ",xQueueMbMqtt.RegData.i16data);
 				}
 			}
+			if (read_mutex == 1){
+				goto MUTEX;
+			}
 			break;
 		case MB_REG_WRITE:
 			xQueueMbMqtt.FunC = MB_FUNC_WRITE_REGISTER;
@@ -227,19 +230,20 @@ eMBErrorCode eMBMasterRegHoldingCB(UCHAR ucPort, UCHAR * pucRegBuffer, USHORT us
 				iRegIndex++;
 				usNRegs--;
 			}
-			command_mutex = 1;
-			printf("\r\n- data write from U16: %d and write mutex: %d \r\n ",xQueueMbMqtt.RegData.i16data, command_mutex);
-			goto MUTEX;
+			if (write_mutex == 1){
+				goto MUTEX;
+			}
 			break;
 		}
-		for (uint8_t i = 0; i < num_device; i++){
+		xQueueMbMqtt.gotflagtelemetry = 2; // update count for device
+ MUTEX:	for (uint8_t i = 0; i < num_device; i++){
 			if ((dynamic+i)->deviceID == xQueueMbMqtt.NodeID && (dynamic+i)->deviceChannel == xQueueMbMqtt.RegAdr.i16data && (dynamic+i)->func == xQueueMbMqtt.FunC ){
 				xQueueMbMqtt.scale = (dynamic+i)->scale;
 			}
 		}
-		printf("\r\n-------------\r\n");
-		xQueueMbMqtt.gotflagtelemetry = 2; // update count for device
- MUTEX: if (command_mutex == 1){
+		if (write_mutex == 1 || read_mutex == 1){
+	 	 	 read_mutex = 0;
+	 	 	 write_mutex = 0;
 			xQueueMbMqtt.gotflagcommand = 3;
 		}
 		BaseType_t Err = pdFALSE;

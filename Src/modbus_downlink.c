@@ -19,6 +19,8 @@ extern osMessageQId xQueueMessageHandle;
 extern osMessageQId xQueueDownlinkHandle;
 extern osMessageQId xQueueUplinkHandle;
 extern osThreadId mbDownlinkTask;
+extern volatile uint8_t read_mutex;
+extern volatile uint8_t write_mutex;
 ///* Private variables ---------------------------------------------------------*/
 //
 
@@ -49,14 +51,15 @@ void ModbusDownlinkTask(void const *argument) {
 			while (1) {
 				Err = xQueueReceive(xQueueDownlinkHandle, &xQueueMbMqtt,portDEFAULT_WAIT_TIME);
 				if (Err == pdPASS) {
-					printf("\r\n Da nhan dc queu \r\n");
 					switch (xQueueMbMqtt.FunC) {
 					case MB_FUNC_READ_HOLDING_REGISTER:
+						read_mutex = 1;
 						eMBMasterReqReadHoldingRegister(xQueueMbMqtt.PortID,
 														xQueueMbMqtt.NodeID, xQueueMbMqtt.RegAdr.i16data,
 														xQueueMbMqtt.RegData.i16data, MB_DEFAULT_TEST_TIMEOUT);
 						break;
 					case MB_FUNC_WRITE_REGISTER:
+						write_mutex = 1;
 						eMBMasterReqWriteHoldingRegister(xQueueMbMqtt.PortID,
 														 xQueueMbMqtt.NodeID, xQueueMbMqtt.RegAdr.i16data,
 														 xQueueMbMqtt.RegData.i16data, MB_DEFAULT_TEST_NREG);
