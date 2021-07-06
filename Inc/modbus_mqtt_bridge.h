@@ -25,6 +25,7 @@ uint8_t topic(char *buffer, char *flow, char *topic, char *api_key);
 
 data1_t *parse_device(char *Buffer, uint16_t BufferLen);
 void parse_sdcardInfo(char *Buffer, uint16_t BufferLen);
+uint8_t parse_device_provision(char *Buffer, uint16_t BufferLen, uint8_t deviceID, uint16_t channelID, uint8_t channel_status);
 void parse_mqttInfor(char *Buffer, uint16_t BufferLen);
 void addDevice(data1_t *destination, data1_t *data);
 void LoadDevice(void);

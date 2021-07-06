@@ -31,8 +31,8 @@
 #include "param.h"
 #include "time_value.h"
 #include "telemetry.h"
-
-
+#include "sdcard.h"
+#include "fatfs.h"
 /* Shared Variables --------------------------*/
 extern osMessageQId xQueueDownlinkHandle;
 extern osMessageQId xQueueUplinkHandle;
@@ -46,8 +46,10 @@ char *mqtt_user;
 char *mqtt_password;
 char *apikey;
 uint16_t u16_mqtt_port;
-char recordbuffer[1000];
-
+char record[500];
+FATFS fs;
+FIL fil;
+FRESULT fresult,fre;
 /* Private Variables -------------------------*/
 uint8_t mqtt_couter_err = 0;
 char buffer[100];
@@ -89,6 +91,69 @@ static int jsoneq(const char *json, jsmntok_t *tok, const char *s) {
 		return 0;
 	}
 	return -1;
+}
+
+uint8_t parse_device_provision(char *Buffer, uint16_t BufferLen, uint8_t deviceID, uint16_t channelID, uint8_t channel_status)
+{
+	uint8_t tempID = 0;
+	uint16_t tempchannelID = 0;
+	char buffer[200];
+	ptr = &test;
+	int r;
+	jsmn_parser p;
+	jsmntok_t t[JSON_MAX_LEN]; /* We expect no more than JSON_MAX_LEN tokens */
+	jsmn_init(&p);
+	r = jsmn_parse(&p, Buffer,BufferLen, t,sizeof(t) / sizeof(t[0]));
+	for (uint8_t i = 1; i < r; i++) {
+		if (jsoneq(Buffer, &t[i], "PORT") == 0) {
+			ptr->channel = atoi(Buffer + t[i + 1].start);
+			i++;
+		} else if (jsoneq(Buffer, &t[i], "ID") == 0) {
+			tempID = (uint8_t)atoi(Buffer + t[i + 1].start);
+			i++;
+		} else if (jsoneq(Buffer, &t[i], "FC") == 0) {
+			ptr->func = (uint8_t)atoi(Buffer + t[i + 1].start);
+			i++;
+		} else if (jsoneq(Buffer, &t[i], "CHANNEL") == 0) {
+			memset(temp0,'\0',sizeof(temp0));
+			strncpy(temp0,Buffer + t[i + 1].start, t[i + 1].end - t[i + 1].start);
+			tempchannelID = (uint16_t)strtol(temp0, NULL, 0);
+			i++;
+		} else if (jsoneq(Buffer, &t[i], "DEVICETYPE") == 0) {
+			memset(temp,'\0',sizeof(temp));
+			strncpy(temp,Buffer + t[i + 1].start, t[i + 1].end - t[i + 1].start);
+			ptr->deviceType = temp;
+			i++;
+		} else if (jsoneq(Buffer, &t[i], "DEVICENAME") == 0) {
+			memset(temp1,'\0',sizeof(temp));
+			strncpy(temp1,Buffer + t[i + 1].start, t[i + 1].end - t[i + 1].start);
+			ptr->deviceName = temp1;
+			i++;
+		} else if (jsoneq(Buffer, &t[i], "CHANNELTITLE") == 0) {
+			memset(temp2,'\0',sizeof(temp2));
+			strncpy(temp2,Buffer + t[i + 1].start, t[i + 1].end - t[i + 1].start);
+			ptr->channeltitle = temp2;
+			i++;
+		}else if (jsoneq(Buffer, &t[i], "VALUETYPE") == 0) {
+			memset(temp3,'\0',sizeof(temp3));
+			strncpy(temp3,Buffer + t[i + 1].start, t[i + 1].end - t[i + 1].start);
+			ptr->valueType= temp3;
+			i++;
+		}else if (jsoneq(Buffer, &t[i], "NUMREG") == 0) {
+			ptr->numreg = (uint8_t)atoi(Buffer + t[i + 1].start);
+			i++;
+		}else if (jsoneq(Buffer, &t[i], "SCALE") == 0) {
+			ptr->scale = (uint16_t)atoi(Buffer + t[i + 1].start);
+			i++;
+		}
+	}
+	if (tempID == deviceID && tempchannelID == channelID){
+		ptr->devicestatus = channel_status;
+		SD_Device(buffer,ptr->channel, deviceID,ptr->func,channelID,ptr->deviceType,ptr->channeltitle,ptr->deviceName,ptr->valueType,channel_status,ptr->scale, ptr->numreg);
+		printf("\r\n buffer: %s\r\n",buffer);
+		//return ptr;
+	}else
+		return 0;
 }
 /*-----------------------------------------PARSING DATA FROM SDCARD-----------------------------------------------------------------------------*/
 void parse_sdcardInfo(char *Buffer, uint16_t BufferLen)
@@ -435,30 +500,24 @@ void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_top
 				}
 			}/* --------------END OF SENDING COMAMND RESPONSE----------------------------------------------*/
 			else if (xQueueMbMqtt.gotflagLast == 1){ // send record data
-				//printf("\r\n recordbuffer: %s\r\n",recordbuffer);
-//				strcat(head,recordbuffer);
-//				err = mqtt_publish(client, pub_topic,head,strlen(head), QOS_0, 0,mqtt_bridge_pub_request_cb,NULL);
-//				if (err != ERR_OK) {
-//					printf("\r\n Publish err: %d\n", err);
-//					if (err == -11){
-//						strcat(head,"\n");
-//						RecordData("record.txt",head);// write data to record.txt
-//						//MX_LWIP_Init();
-//
-//					}else if (err == -1){// do something for err : out of memory
-//						strcat(head,"\n");
-//						RecordData("record.txt",head);// write data to record.txt
-//					}
-//					memset(head,'\0',sizeof(head));
-//					memset(tail,'\0',sizeof(tail));
-//					counter = 0;
-//				}
-//				else if (err == ERR_OK){
-//
-//				}
-//				memset(head,'\0',sizeof(head));
-//				memset(tail,'\0',sizeof(tail));
-//				counter = 0;
+				MX_FATFS_Init();
+				fresult = f_mount(&fs, "/", 1);
+				fresult = f_open(&fil,"record.txt", FA_READ);
+				for (uint8_t i= 0; (f_eof(&fil) == 0); i++)
+					{
+						memset(head,'\0',sizeof(head));
+						f_gets((char*)head, sizeof(head), &fil);
+						head[strlen(head)-1] = '\0';
+						HAL_Delay(200);
+						//printf("\r\n Telemetry buffer: %s\r\n",record);
+						err = mqtt_publish(client, pub_topic,head,strlen(head), QOS_0, 0,mqtt_bridge_pub_request_cb,NULL);
+						if (err != ERR_OK){
+							printf("\r\n Publish record fail with err: %d", err);
+						}
+					}
+				//f_unlink(file);
+				//f_rename("temp.txt",file);
+				fresult = f_close(&fil);
 			}
 			else if (xQueueMbMqtt.gotflagLast == 2) {
 				getTime(time);
@@ -602,21 +661,15 @@ uint8_t mqtt_modbus_thread_down_provision(char *Buffer,uint16_t BufferLen) {
 				for (uint8_t j = i; j < r-1; j++){
 					if(j % 2 == 0){
 						channelID = (uint16_t)atoi(Buffer + t[j + 1].start);
-						//printf("\r\n -channelID oiu: %d\r\n",channelID);
 					}
 					else if (j %2 != 0){
 						channelStatus = atoi(Buffer + t[j + 1].start);
-						for (uint8_t m = 0; m < num_device; m++){
-							if( (dynamic+m)->deviceID == deviceID && (dynamic+m)->deviceChannel == channelID){
-								//(dynamic+m)->devicestatus = channelStatus;
-								printf("\r\n - deviceID %d \t channelID: %d \t channelstatus: %d\r\n",deviceID,channelID,channelStatus);
-							}
-						}
 					}
 				}
 			}
 
 		}
+
 		//printf("\r\n - deviceID %d \t channelID: %d \t channelstatus: %d\r\n",deviceID,channelID,channelStatus);
 }
 uint8_t mqtt_modbus_thread_down_command(char *pJsonMQTTBuffer,uint16_t pJsonMQTTBufferLen) {

@@ -33,6 +33,7 @@ FRESULT fresult;
 DIR dirOject;
 FILINFO fileInfo;
 char SDbuffer[200];
+uint8_t record[200];
 
 uint32_t mqtt_port;
 uint32_t modbus_mutex;
@@ -76,6 +77,7 @@ int Cmd_delete_line(int argc, char *argv[]);
 int Cmd_check_record(int argc, char *argv[]);
 int Cmd_list_test(int argc, char *argv[]);
 int Cmd_set_telemetry(int argc, char *argv[]);
+int Cmd_send_telemetry(int argc, char *argv[]);
 
 tCmdLineEntry g_psCmdTable[] = {
 		{ "checkrecord",Cmd_check_record," : Send provision request" },
@@ -107,6 +109,7 @@ tCmdLineEntry g_psCmdTable[] = {
 		{ "nano",Cmd_read_file," : Send provision request" },
 		{ "ls",Cmd_list_file," : Send provision request" },
 		{ "test",Cmd_list_test," : Send provision request" },
+		{ "sendtelemetry",Cmd_send_telemetry," : Send provision request" },
 
 		{ 0, 0, 0 } };
 
@@ -327,7 +330,7 @@ int Cmd_set_device(int argc, char *argv[])
 	char *valueType= *(argv+8);
 	uint8_t deviceStatus = 0;
 	uint16_t scale = atoi(*(argv+9));
-	SD_Device(buffer,port,deviceID,func,deviceChannel,deviceType,deviceTitle,deviceName,valueType,deviceStatus,scale);
+	//SD_Device(buffer,port,deviceID,func,deviceChannel,deviceType,deviceTitle,deviceName,valueType,deviceStatus,scale);
 	uint8_t status = write_sdcard("test.txt", buffer);
 	if (status == 1){
 		printf("\r\n write data status: %d\r\n",status);
@@ -594,6 +597,7 @@ static uint8_t overwrite_file(char *file, char *data, uint8_t line)
 		printf("\r\nNOT MOUTING SD CARD, PLEASE CHECK SD CARD\r\n");
 	}
 }
+
 int Cmd_set_timeout(int argc, char *argv[]) // timeout: 15s, 30s, 1p, 3p, 5p, 10p
 {
 	uint16_t timeout= atoi(*(argv+1));
@@ -764,6 +768,18 @@ int Cmd_list_test(int argc, char *argv[])
 {
 	printf("\nCmd_list_test\r\n");
 	printf("------------------\r\n");
-	uint16_t temp = (uint16_t)strtol(*(argv+1), NULL, 0);
-	printf("\nstrtol: %d\r\n", temp);
+	xQueueMbMqtt_t xQueueMbMqtt;
+	BaseType_t Err = pdFALSE;
+	if (CheckRecord("record.txt") == 1){
+		xQueueMbMqtt.gotflagLast = 1;
+		Err = xQueueSend(xQueueUplinkHandle, &xQueueMbMqtt,1000);
+		if (Err == pdPASS){
+			xQueueMbMqtt.gotflagLast = 0;
+		}
+	}
 }
+int Cmd_send_telemetry(int argc, char *argv[])
+{
+	printf("\nCmd_send\r\n");
+	printf("------------------\r\n");
+	}

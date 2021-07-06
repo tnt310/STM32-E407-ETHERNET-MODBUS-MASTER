@@ -63,7 +63,7 @@ FATFS fs;
 FIL fil;
 FRESULT fresult,fre;
 
-extern char recordbuffer[1000];
+
 char SDbuffer[200];
 static data1_t *ptr;
 data1_t *dynamic;
@@ -83,7 +83,7 @@ osThreadId flashTask;
 extern uint32_t gotCommandFlag;
 extern uint8_t commandBuffer[200];
 extern uint32_t commandBufferIndex;
-
+extern uint8_t record[200];
 
 osMessageQId xQueueControlHandle;
 osMessageQId xQueueMessageHandle;
@@ -323,8 +323,7 @@ void StartDefaultTask(void const * argument)
 			break;
 		case SYS_MB_PROTOCOL:
 			printf("\r\n Starting mbProtocolTask module:  \r\n");
-			sysError = xQueueReceive(xQueueControlHandle, &xQueueControl,
-			portMAX_DELAY);
+			sysError = xQueueReceive(xQueueControlHandle, &xQueueControl, portMAX_DELAY);
 			if (sysError == pdPASS) {
 				if ((xQueueControl.xState == TASK_RUNNING)&& (xQueueControl.xTask == mbProtocolTask)) {
 					printf("\r\n Starting mbProtocolTask module: OK \r\n");
@@ -337,8 +336,7 @@ void StartDefaultTask(void const * argument)
 			break;
 		case SYS_MB_APP:
 			printf("\r\n Starting mbAppTask module:  \r\n");
-			sysError = xQueueReceive(xQueueControlHandle, &xQueueControl,
-			portMAX_DELAY);
+			sysError = xQueueReceive(xQueueControlHandle, &xQueueControl, portMAX_DELAY);
 			if (sysError == pdTRUE) {
 				if ((xQueueControl.xState == TASK_RUNNING)
 						&& (xQueueControl.xTask == mbAppTask)) {
@@ -470,23 +468,16 @@ void StartDefaultTask(void const * argument)
 			break;
 		case SYS_RECORD:
 			printf("\r\n SYS_RECORD: Starting...  \r\n");
+			xQueueMbMqtt_t xQueueMbMqtt;
 			BaseType_t Err = pdFALSE;
 			if (CheckRecord("record.txt") == 1){
-				MX_FATFS_Init();
-				fresult = f_mount(&fs, "/", 1);
-				fresult = f_open(&fil,"record.txt", FA_READ);
-				for (uint8_t i= 0; (f_eof(&fil) == 0); i++)
-					{
-						memset(recordbuffer,'\0',sizeof(recordbuffer));
-						f_gets((char*)recordbuffer, sizeof(recordbuffer), &fil);
-						xQueueMbMqtt.gotflagLast = 1;
-						Err = xQueueSend(xQueueUplinkHandle, &xQueueMbMqtt,portDEFAULT_WAIT_TIME);
-						if (Err == pdPASS){
-							xQueueMbMqtt.gotflagLast = 0;
-						}
-						//printf("\r\n buffer: %s\r\n",recordbuffer);
-					}
-				fresult = f_close(&fil);
+				xQueueMbMqtt.gotflagLast = 1;
+				//HAL_Delay(2000);
+				Err = xQueueSend(xQueueUplinkHandle, &xQueueMbMqtt,portDEFAULT_DELAY);
+				if (Err == pdPASS){
+					xQueueMbMqtt.gotflagLast = 0;
+					//printf("\r\n-----------------ALL DATA IN RECORD: SENT--------------------\r\n");
+				}
 			}
 			uiSysUpdate = TRUE;
 			uiSysState++;

@@ -41,7 +41,7 @@ static uint8_t count = 0;
 #define M_REG_HOLDING_NREGS            65000
 
 #define M_REG_COIL_START               0
-#define M_REG_COIL_NREGS               40
+#define M_REG_COIL_NREGS               65000
 
 #define M_REG_INPUT_START              0
 #define M_REG_INPUT_NREGS              65000
@@ -100,62 +100,62 @@ void ModbusTestTask(void const *argument) {
 	#define MB_DEFAULT_TEST_TIMEOUT  1
 	device_t device;
 	while (1) {
-		while(modbus_telemetry){
-			for (uint8_t i = 0;i < num_device ; i++){
-				for (uint8_t j = 0; j < num_device ; j++){
-					if ((dynamic + j)->deviceID == (dynamic +i)->deviceID && (dynamic +i)->deviceID != (dynamic +i-1)->deviceID){
-		                count++;
-		                if (count == 1)
-		                    {
-		                        if (i > 0){
-		                        for (uint8_t a = 0; a < i; a++){
-		                             if ((dynamic +a)->deviceID == (dynamic +j)->deviceID){
-		                                goto TEST;
-		                                }
-		                            }
-		                        }
-		                        for (uint8_t z = 0; z < num_device ; z++)
-		                        {
-		                            if ((dynamic +z)->deviceID == (dynamic +j)->deviceID ){
-		                            	device.channel = (dynamic +z)->channel;
-		                            	device.id = (dynamic +z)->deviceID;
-		                            	device.func = (dynamic +z)->func;
-		                            	device.regAdr = (dynamic +z)->deviceChannel;
-		                            	device.numreg =(dynamic +z)->numreg;
-		                            	switch(device.channel)
-		                            	{
-		                            		case 0:
-		                            		switch(device.func)
-		                            		{
-		                            			case MB_FUNC_READ_HOLDING_REGISTER:
-		                            				eMBMasterReqReadHoldingRegister(device.channel, device.id, device.regAdr,device.numreg, MB_DEFAULT_TEST_TIMEOUT);
-		                            				break;
-		                            			case MB_FUNC_READ_COILS:
-		                            				eMBMasterReqReadCoils(device.channel, device.id, device.regAdr,device.numreg, MB_DEFAULT_TEST_TIMEOUT);
-		                            				break;
-		                            			case MB_FUNC_READ_INPUT_REGISTER:
-		                            				eMBMasterReqReadInputRegister(device.channel, device.id, device.regAdr,device.numreg, MB_DEFAULT_TEST_TIMEOUT);
-		                            				break;
-		                            		}
-		                            		break;
-		                            	}
-		                            	HAL_Delay(300);
-		                            }
-		                        }
-		                    }
+			while(modbus_telemetry){
+					for (uint8_t i = 0;i < num_device ; i++){
+						for (uint8_t j = 0; j < num_device ; j++){
+							if ((dynamic + j)->deviceID == (dynamic +i)->deviceID && (dynamic +i)->deviceID != (dynamic +i-1)->deviceID){
+				                count++;
+				                if (count == 1)
+				                    {
+				                        if (i > 0){
+				                        for (uint8_t a = 0; a < i; a++){
+				                             if ((dynamic +a)->deviceID == (dynamic +j)->deviceID){
+				                                goto TEST;
+				                                }
+				                            }
+				                        }
+				                        for (uint8_t z = 0; z < num_device ; z++)
+				                        {
+				                            if ((dynamic +z)->deviceID == (dynamic +j)->deviceID ){
+				                            	device.channel = (dynamic +z)->channel;
+				                            	device.id = (dynamic +z)->deviceID;
+				                            	device.func = (dynamic +z)->func;
+				                            	device.regAdr = (dynamic +z)->deviceChannel;
+				                            	device.numreg =(dynamic +z)->numreg;
+				                            	switch(device.channel)
+				                            	{
+				                            		case 0:
+				                            		switch(device.func)
+				                            		{
+				                            			case MB_FUNC_READ_HOLDING_REGISTER:
+				                            				eMBMasterReqReadHoldingRegister(device.channel, device.id, device.regAdr,device.numreg, MB_DEFAULT_TEST_TIMEOUT);
+				                            				break;
+				                            			case MB_FUNC_READ_COILS:
+				                            				eMBMasterReqReadCoils(device.channel, device.id, device.regAdr,device.numreg, MB_DEFAULT_TEST_TIMEOUT);
+				                            				break;
+				                            			case MB_FUNC_READ_INPUT_REGISTER:
+				                            				eMBMasterReqReadInputRegister(device.channel, device.id, device.regAdr,device.numreg, MB_DEFAULT_TEST_TIMEOUT);
+				                            				break;
+				                            		}
+				                            		break;
+				                            	}
+				                            	HAL_Delay(300);
+				                            }
+				                        }
+				                    }
+							}
+						}
+						TEST: count = 0;
 					}
-				}
-				TEST: count = 0;
+					HAL_Delay(100);
+					xQueueMbMqtt.gotflagLast = 2;
+					BaseType_t Err = pdFALSE;
+					Err = xQueueSend(xQueueUplinkHandle, &xQueueMbMqtt,portDEFAULT_WAIT_TIME);
+					if (Err == pdPASS){
+						xQueueMbMqtt.gotflagLast = 0;
+					}
+					HAL_Delay((timeDelay * 1000)-(300 * num_device)-100-11000);
 			}
-			HAL_Delay(100);
-			xQueueMbMqtt.gotflagLast = 2;
-			BaseType_t Err = pdFALSE;
-			Err = xQueueSend(xQueueUplinkHandle, &xQueueMbMqtt,portDEFAULT_WAIT_TIME);
-			if (Err == pdPASS){
-				xQueueMbMqtt.gotflagLast = 0;
-			}
-			HAL_Delay((timeDelay*1000)-(300*num_device)-100-11000);
-		}
 	}
 }
 /*--------------------------Master Callback Function for Holding Register---------------------------------------------------------------------------*/
