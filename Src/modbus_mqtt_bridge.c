@@ -515,8 +515,8 @@ void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_top
 							printf("\r\n Publish record fail with err: %d", err);
 						}
 					}
-				//f_unlink(file);
-				//f_rename("temp.txt",file);
+				fresult = f_unlink("record.txt");
+				fresult = f_open(&fil,"record.txt", FA_CREATE_ALWAYS);
 				fresult = f_close(&fil);
 			}
 			else if (xQueueMbMqtt.gotflagLast == 2) {
