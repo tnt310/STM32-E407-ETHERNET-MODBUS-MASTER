@@ -99,8 +99,9 @@ void ModbusTestTask(void const *argument) {
 	#define MB_DEFAULT_TEST_NREG	0x01
 	#define MB_DEFAULT_TEST_TIMEOUT  1
 	device_t device;
+	uint8_t count = 0;
 	while (1) {
-			while(modbus_telemetry){
+		while(modbus_telemetry){
 					for (uint8_t i = 0;i < num_device ; i++){
 						for (uint8_t j = 0; j < num_device ; j++){
 							if ((dynamic + j)->deviceID == (dynamic +i)->deviceID && (dynamic +i)->deviceID != (dynamic +i-1)->deviceID){
@@ -155,6 +156,7 @@ void ModbusTestTask(void const *argument) {
 						xQueueMbMqtt.gotflagLast = 0;
 					}
 					HAL_Delay((timeDelay * 1000)-(300 * num_device)-100-11000);
+
 			}
 	}
 }

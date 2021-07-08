@@ -22,6 +22,7 @@ extern osThreadId defaultTaskHandle;
 extern osSemaphoreId resetHandle;
 extern osMessageQId xQueueResetHandle;
 extern osMessageQId xQueueUplinkHandle;
+extern osMessageQId xQueueDownlinkHandle;
 extern data1_t *dynamic;
 
 UART_HandleTypeDef huart6;
@@ -47,6 +48,7 @@ char *device_file = "device.txt";
 char *mqtt_file = "mqtt.txt";
 char *serial_file = "serial.txt";
 
+int Cmd_set_apikey(int argc, char *argv[]);
 int Cmd_set_timeout(int argc, char *argv[]);
 int Cmd_set_port0(int argc, char *argv[]);
 int Cmd_set_port1(int argc, char *argv[]);
@@ -78,6 +80,7 @@ int Cmd_check_record(int argc, char *argv[]);
 int Cmd_list_test(int argc, char *argv[]);
 int Cmd_set_telemetry(int argc, char *argv[]);
 int Cmd_send_telemetry(int argc, char *argv[]);
+int Cmd_off_telemetry(int argc, char *argv[]);
 
 tCmdLineEntry g_psCmdTable[] = {
 		{ "checkrecord",Cmd_check_record," : Send provision request" },
@@ -88,6 +91,7 @@ tCmdLineEntry g_psCmdTable[] = {
 		{ "configport1",Cmd_set_port1," : Send provision request" },
 		{ "configtelemetry",Cmd_set_telemetry," : Send provision request" },
 		{ "confignetwork",Cmd_set_network," : Send provision request" },
+		{ "configapikey",Cmd_set_apikey," : Send provision request" },
 		{ "configmqtt",Cmd_set_mqttInfo," : Send provision request" },
 		{ "gettime",Cmd_get_time," : Send provision request" },
 		{ "setmqttport", Cmd_mqtt_port," : Set static ip for brigde" },
@@ -110,6 +114,7 @@ tCmdLineEntry g_psCmdTable[] = {
 		{ "ls",Cmd_list_file," : Send provision request" },
 		{ "test",Cmd_list_test," : Send provision request" },
 		{ "sendtelemetry",Cmd_send_telemetry," : Send provision request" },
+		{ "offtelemetry",Cmd_off_telemetry," : Send provision request" },
 
 		{ 0, 0, 0 } };
 
@@ -604,6 +609,14 @@ int Cmd_set_timeout(int argc, char *argv[]) // timeout: 15s, 30s, 1p, 3p, 5p, 10
 	char buffer[20];
 	SD_timeout(buffer,timeout);
 	printf("\r\n timeout is set: %s\r\n",buffer);
+	overwrite_file("config.txt",buffer, 5);
+}
+int Cmd_set_apikey(int argc, char *argv[])
+{
+	char *key=  *(argv+1);
+	char buffer[100];
+	SD_apikey(buffer,key);
+	printf("\r\n apikey is set: %s\r\n",buffer);
 	overwrite_file("config.txt",buffer, 4);
 }
 int Cmd_set_telemetry(int argc, char *argv[])
@@ -612,7 +625,7 @@ int Cmd_set_telemetry(int argc, char *argv[])
 	char buffer[20];
 	SD_telemetry(buffer, telemetry);
 	printf("\r\n telemetry is set: %s\r\n",buffer);
-	overwrite_file("config.txt",buffer, 5);
+	overwrite_file("config.txt",buffer, 6);
 }
 int Cmd_set_port0(int argc, char *argv[]) // timeout: 15s, 30s, 1p, 3p, 5p, 10p
 {
@@ -780,6 +793,30 @@ int Cmd_list_test(int argc, char *argv[])
 }
 int Cmd_send_telemetry(int argc, char *argv[])
 {
-	printf("\nCmd_send\r\n");
+	printf("\nCmd_send_telemetry\r\n");
 	printf("------------------\r\n");
-	}
+	printf("\r\n NUMBER OF DEVICE: %d\r\n",num_device);
+	xQueueMbMqtt_t xQueueMbMqtt;
+	BaseType_t Err = pdFALSE;
+	#define portDEFAULT_WAIT_TIME 1000
+	xQueueMbMqtt.gotflagMosbusTask = 1;
+	xQueueMbMqtt.sum_dev = num_device;
+	Err = xQueueSend(xQueueUplinkHandle, &xQueueMbMqtt,portDEFAULT_WAIT_TIME);
+	if (Err == pdPASS) {
+			printf("\r\nSend: Ok\r\n");
+		}
+}
+int Cmd_off_telemetry(int argc, char *argv[]) {
+	printf("\nCmd_off_telemetry\r\n");
+	printf("------------------\r\n");
+	xQueueMbMqtt_t xQueueMbMqtt;
+	BaseType_t Err = pdFALSE;
+	#define portDEFAULT_WAIT_TIME 1000
+	xQueueMbMqtt.gotflagMosbusTask = 0;
+	xQueueMbMqtt.sum_dev = num_device;
+	Err = xQueueSend(xQueueUplinkHandle, &xQueueMbMqtt,portDEFAULT_WAIT_TIME);
+	if (Err == pdPASS) {
+			printf("\r\nSend: Ok\r\n");
+		}
+}
+

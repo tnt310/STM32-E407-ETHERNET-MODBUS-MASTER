@@ -137,6 +137,7 @@ typedef struct{
 	int32toint8 RegData32;
 	uint8_t gotflagProvision;
 	uint8_t gotflagcommand;
+	uint8_t gotflagMosbusTask;
 	uint8_t gotflagtelemetry;
 	uint8_t gotflagLast;
 	uint8_t mutex;

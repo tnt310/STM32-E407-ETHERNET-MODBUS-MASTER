@@ -235,12 +235,6 @@ void parse_sdcardInfo(char *Buffer, uint16_t BufferLen)
 					printf("\r\n -port: %.*s\r\n", t[j + 1].end - t[j + 1].start,Buffer + t[j + 1].start);
 					u16_mqtt_port= atoi(Buffer + t[j + 1].start);
 					j++;
-				}else if (jsoneq(Buffer, &t[j], "apikey") == 0){
-					//printf("\r\n -apikey: %.*s\r\n", t[j + 1].end - t[j + 1].start,Buffer + t[j + 1].start);
-					//char key[30];
-					strncpy(key,Buffer + t[j + 1].start, t[j + 1].end - t[j + 1].start);
-					apikey = key;
-					j++;
 				}
 			}
 			break;
@@ -314,7 +308,12 @@ void parse_sdcardInfo(char *Buffer, uint16_t BufferLen)
 			//printf("\r\n - timeout: %.*s\r\n", t[i + 1].end - t[i + 1].start,Buffer + t[i + 1].start);
 			modbus_telemetry = atoi(Buffer + t[i + 1].start);
 			break;
+		}else if (jsoneq(Buffer, &t[i], "apikey") == 0){
+			strncpy(key,Buffer + t[i + 1].start, t[i + 1].end - t[i + 1].start);
+			apikey = key;
+			break;
 		}
+
 	}
 }
 
@@ -529,12 +528,12 @@ void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_top
 				if (err != ERR_OK) {
 					printf("\r\n Publish err: %d\n", err);
 					if (err == -11){
-						//strcat(head,"\n");
-						//RecordData("record.txt",head);// write data to record.txt
+						strcat(head,"\n");
+						RecordData("record.txt",head);// write data to record.txt
 						//MX_LWIP_Init();
 					}else if (err == -1){
-						//strcat(head,"\n");
-						//RecordData("record.txt",head);// write data to record.txt
+						strcat(head,"\n");
+						RecordData("record.txt",head);// write data to record.txt
 						// do something for err : out of memory
 					}
 					memset(head,'\0',sizeof(head));

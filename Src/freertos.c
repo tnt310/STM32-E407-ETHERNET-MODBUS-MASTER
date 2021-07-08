@@ -64,7 +64,7 @@ FIL fil;
 FRESULT fresult,fre;
 
 
-char SDbuffer[200];
+char SDbuffer[300];
 static data1_t *ptr;
 data1_t *dynamic;
 uint8_t num_device;
@@ -274,7 +274,7 @@ void StartDefaultTask(void const * argument)
 	printf("\r\n MemFree: %d", xPortGetFreeHeapSize());
 
 	/*Get time*/
-	osThreadDef(netTimeTask, NetworkTimeTask, osPriorityNormal, 0, 4 * 128);
+	osThreadDef(netTimeTask, NetworkTimeTask, osPriorityNormal, 0, 8 * 128);
 	netTimeTask = osThreadCreate(osThread(netTimeTask), NULL);
 	printf("\r\n MemFree: %d", xPortGetFreeHeapSize());
 
@@ -361,6 +361,8 @@ void StartDefaultTask(void const * argument)
 				}
 			} else {
 				printf("\r\n Starting mbDownlinkTask module: Responding Timeout \r\n");
+				uiSysUpdate = TRUE;
+				uiSysState++;
 			}
 			break;
 
@@ -437,7 +439,7 @@ void StartDefaultTask(void const * argument)
 //			if (BSP_SD_Init() == MSD_OK)
 //				{
 					fresult = f_mount(&fs, "/", 1);
-					fresult = f_open(&fil,"sdio.txt", FA_READ);
+					fresult = f_open(&fil,"demo.txt", FA_READ);
 					for (line= 0; (f_eof(&fil) == 0); line++)
 						{
 							f_gets((char*)SDbuffer, sizeof(SDbuffer), &fil);
@@ -448,7 +450,7 @@ void StartDefaultTask(void const * argument)
 					dynamic = (data1_t*)pvPortMalloc(line * sizeof(data1_t));
 					if (dynamic != NULL){
 						fresult = f_mount(&fs, "/", 1);
-						fresult = f_open(&fil,"sdio.txt", FA_READ);
+						fresult = f_open(&fil,"demo.txt", FA_READ);
 						for (uint8_t i = 0; (f_eof(&fil) == 0); i++)
 							{
 								memset(SDbuffer,'\0',sizeof(SDbuffer));
