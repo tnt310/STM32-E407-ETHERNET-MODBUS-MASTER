@@ -120,7 +120,7 @@ void MX_LWIP_Init(void)
   }
 
 /* USER CODE BEGIN 3 */
-//  vTaskDelay(1000);
+ // vTaskDelay(1000);
 //  if (ip_addr_isany(gnetif.ip_addr.addr) != NULL)
 //  {
 //

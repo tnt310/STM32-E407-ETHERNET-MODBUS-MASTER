@@ -82,34 +82,89 @@ static void http_server_serve(struct netconn *conn) {
 	err_t recv_err;
 	char *buf;
 	u16_t buflen;
+	//struct fs_file file;
+	//char *ptrUser;
+	//char *ptrMalloc;
 	char data[11];
     xQueueMbMqtt_t xQueueMbMqtt;
-	/* Read the data from the port, blocking if nothing yet there.We assume the request (the part we care about) is in one netbuf */
+	/* Read the data from the port, blocking if nothing yet there.
+	 We assume the request (the part we care about) is in one netbuf */
 	recv_err = netconn_recv(conn, &inbuf);
+
 	if (recv_err == ERR_OK) {
 		if (netconn_err(conn) == ERR_OK) {
 			netbuf_data(inbuf, (void **) &buf, &buflen);
 			xQueueMbMqtt.PortID= 0;
-			xQueueMbMqtt.NodeID= *(buf+6);
-			xQueueMbMqtt.FunC= *(buf+7);
+			xQueueMbMqtt.NodeID=*(buf+6);
+			xQueueMbMqtt.FunC=*(buf+7);
 			xQueueMbMqtt.RegAdr.i8data[0] = *(buf+9);
 			xQueueMbMqtt.RegAdr.i8data[1] = *(buf+8);
 			xQueueMbMqtt.RegData.i8data[0] = *(buf+11);
 			xQueueMbMqtt.RegData.i8data[1] = *(buf+10);
 			#define portDEFAULT_WAIT_TIME 1000
 			BaseType_t Err = pdFALSE;
-			Err = xQueueSend(xQueueDownlinkHandle, &xQueueMbMqtt, portDEFAULT_WAIT_TIME);
+			Err = xQueueSend(xQueueDownlinkHandle, &xQueueMbMqtt,portDEFAULT_WAIT_TIME);
 			if (Err == pdPASS) {
+				printf("\r\n Send: OK \r\n");
+				BaseType_t err = pdFALSE;
+				err = xQueueReceive(xQueueUplinkHandle, &xQueueMbMqtt, 1000);
+				if (err == pdPASS) {
+					printf("\r\n Received: OK \r\n");
+//					*(data+0) = *(buf+0); 		// Transaction ID
+//					*(data+1) = *(buf+1);		// Transaction ID
+//					*(data+2) = 0;				// Protocol ID
+//					*(data+3) = 0;				// Protocol ID
+//					*(data+4) = 0;				// Lenght of the rest
+//					*(data+5) = 5;				// Lenght of the rest
+//					*(data+6) = *(buf+6); 		// Node ID
+//					*(data+7) = *(buf+7);		// Function Code
+//					*(data+8) = 2; 				// Lenght of data
+//					*(data+9) = 0;				// High data
+//					*(data+10) = 5; 			// Low data
+					data[0] = *(buf+0); 		// Transaction ID
+					data[1] = *(buf+1);		// Transaction ID
+					data[2] = 0;				// Protocol ID
+					data[3] = 0;				// Protocol ID
+					data[4] = 0;				// Lenght of the rest
+					data[5] = 5;				// Lenght of the rest
+					data[6] = *(buf+6); 		// Node ID
+					data[7] = *(buf+7);		// Function Code
+					data[8] = 2; 				// Lenght of data
+					data[9] =  xQueueMbMqtt.RegData.i8data[1]; // High data
+					data[10] = xQueueMbMqtt.RegData.i8data[0]; // Low data
+					netconn_write(conn, &data,sizeof(data), NETCONN_NOCOPY);
+				}
             }
 			else {
 				printf("\r\n Send : FALSE \r\n");
 			}
-		}
+	}
+		/* Begin Additional Code for processing Uplink to Desktop app*/
+				/*
+			xQueueMbMqtt.TransID.i8data[0] = *(buf+1);
+			xQueueMbMqtt.TransID.i8data[1] = *(buf+0);
+
+			xQueueMbMqtt.ProID.i8data[0] = *(buf+3);
+			xQueueMbMqtt.ProID.i8data[1] = *(buf+2);
+
+			xQueueMbMqtt.Lent.i8data[0] = *(buf+5);
+			xQueueMbMqtt.Lent.i8data[1] = *(buf+4);
+
+			xQueueMbMqtt.NodeID= *(buf+6);
+			xQueueMbMqtt.FunC= *(buf+7);
+
+			xQueueMbMqtt.Rest.i8data[0] = 2;
+			xQueueMbMqtt.Rest.i8data[1] = 0;
+
+			xQueueMbMqtt.RegAdr.i8data[0] = 20;
+			xQueueMbMqtt.RegAdr.i8data[1] = 0;*/
+
 		/* End Additional Code for processing Uplink to Desktop app*/
 	}
 	/* Close the connection (server closes in HTTP) */
 	netconn_close(conn);
-	/* Delete the buffer (netconn_recv gives us ownership,so we have to make sure to deallocate the buffer) */
+	/* Delete the buffer (netconn_recv gives us ownership,
+	 so we have to make sure to deallocate the buffer) */
 	netbuf_delete(inbuf);
 }
 /*--------------------------------------------------------------------------------------------------------------------------------*/
@@ -137,7 +192,7 @@ void http_server_netconn_thread(void *arg) {
 	while (1)
 		if (conn != NULL) {
 			/* Bind to port 502 (Modbus TCP) with default IP address */
-			err = netconn_bind(conn, NULL, 80);
+			err = netconn_bind(conn, NULL, 502);
 			if (err == ERR_OK) {
 				/* Put the connection into LISTEN state */
 				netconn_listen(conn);

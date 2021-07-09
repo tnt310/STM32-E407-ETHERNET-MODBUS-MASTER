@@ -197,16 +197,6 @@ void parse_sdcardInfo(char *Buffer, uint16_t BufferLen)
 						//printf("\r\n New gateway: %d %d %d %d", netParam.gateway.cdata[0],netParam.gateway.cdata[1], netParam.gateway.cdata[2],netParam.gateway.cdata[3]);
 					}
 					j++;
-				}else if (jsoneq(Buffer, &t[j], "broker") == 0){
-					//printf("\r\n -broker: %.*s\r\n", t[j + 1].end - t[j + 1].start,Buffer + t[j + 1].start);
-					//char broker_temp[20];
-					strncpy(broker_temp,Buffer + t[j + 1].start, t[j + 1].end - t[j + 1].start);
-					ip4_addr_t ip;
-					if (ipaddr_aton(broker_temp, &ip)) {
-						mqttHostParam.ip.idata = ip.addr;
-						//printf("\r\n New Broker IP: %d %d %d %d", mqttHostParam.ip.cdata[0],mqttHostParam.ip.cdata[1], mqttHostParam.ip.cdata[2],mqttHostParam.ip.cdata[3]);
-					}
-					j++;
 				}
 			}
 			break;
@@ -218,6 +208,15 @@ void parse_sdcardInfo(char *Buffer, uint16_t BufferLen)
 					//char Id[20];
 					strncpy(Id,Buffer + t[j + 1].start, t[j + 1].end - t[j + 1].start);
 					mqtt_id = Id;
+					j++;
+				}else if (jsoneq(Buffer, &t[j], "broker") == 0){
+					//printf("\r\n -broker: %.*s\r\n", t[j + 1].end - t[j + 1].start,Buffer + t[j + 1].start);
+					//char broker_temp[20];
+					strncpy(broker_temp,Buffer + t[j + 1].start, t[j + 1].end - t[j + 1].start);
+					ip4_addr_t ip;
+					if (ipaddr_aton(broker_temp, &ip)) {
+						mqttHostParam.ip.idata = ip.addr;
+					}
 					j++;
 				}else if (jsoneq(Buffer, &t[j], "username") == 0){
 					//printf("\r\n -username: %.*s\r\n", t[j + 1].end - t[j + 1].start,Buffer + t[j + 1].start);
@@ -470,8 +469,7 @@ void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_top
 					er = xQueueSend(xQueueDownlinkHandle, &xQueueMbMqtt,portDEFAULT_WAIT_TIME);
 					if (er == pdPASS) {
 					}
-				}/* --------------END OF SENDING PROVISION---------------------------------------------------------------------*/
-			else if (xQueueMbMqtt.gotflagcommand == 3){  // check command
+				}else if (xQueueMbMqtt.gotflagcommand == 3){  // check command
 				if (xQueueMbMqtt.FunC == 3){
 					if (xQueueMbMqtt.flag32 == 1){
 						xQueueMbMqtt.flag32 = 0;
@@ -480,11 +478,21 @@ void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_top
 						sprintf(res,"%d",xQueueMbMqtt.RegData32.i32data);
 						ftoa(ftoastr, res, xQueueMbMqtt.scale);
 						command_read_json(head, xQueueMbMqtt.NodeID, xQueueMbMqtt.RegAdr.i16data,ftoastr);
+					}else if(xQueueMbMqtt.flag64 == 1){
+						xQueueMbMqtt.flag64 = 0;
+					    memset(res,'\0',sizeof(res));
+					    memset(ftoastr,'\0',sizeof(ftoastr));
+					    char *s = itoa_user(xQueueMbMqtt.RegData64.i64data, 10);
+					    printf("\r\n Command value: %s",s);
+					    ftoa(ftoastr, itoa_user(xQueueMbMqtt.RegData64.i64data, 10), 1000);
+						command_read_json(head, xQueueMbMqtt.NodeID, xQueueMbMqtt.RegAdr.i16data,ftoastr);
 					}else{
 					    memset(res,'\0',sizeof(res));
 					    memset(ftoastr,'\0',sizeof(ftoastr));
 						sprintf(res,"%d",xQueueMbMqtt.RegData.i16data);
-						ftoa(ftoastr, res, xQueueMbMqtt.scale);
+						printf("\r\n res data: %s with lent: %d \r\n",res, strlen(res));
+						ftoa(ftoastr, res, 1000);
+						printf("\r\n ftoastr data: %s \r\n",ftoastr);
 						command_read_json(head, xQueueMbMqtt.NodeID, xQueueMbMqtt.RegAdr.i16data,ftoastr);
 					}
 				}
@@ -552,6 +560,14 @@ void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_top
 					sprintf(res,"%d",xQueueMbMqtt.RegData32.i32data);
 					ftoa(ftoastr, res, xQueueMbMqtt.scale);
 					printf("\r\nTelemetry data reg32: %d \t %d \t %s\r\n",xQueueMbMqtt.NodeID,xQueueMbMqtt.RegAdr.i16data ,ftoastr);
+				}else if (xQueueMbMqtt.flag64 == 1){
+					xQueueMbMqtt.flag64 = 0;
+				    memset(res,'\0',sizeof(res));
+				    memset(ftoastr,'\0',sizeof(ftoastr));
+				    char *s = itoa_user(xQueueMbMqtt.RegData64.i64data, 10);
+					//sprintf(res,"%d",xQueueMbMqtt.RegData64.i64data);
+					ftoa(ftoastr, itoa_user(xQueueMbMqtt.RegData64.i64data, 10), 10);
+					printf("\r\nTelemetry data reg64: %d \t %d \t %s\r\n",xQueueMbMqtt.NodeID,xQueueMbMqtt.RegAdr.i16data ,ftoastr);
 				}else{
 				    memset(res,'\0',sizeof(res));
 				    memset(ftoastr,'\0',sizeof(ftoastr));
@@ -707,9 +723,6 @@ uint8_t mqtt_modbus_thread_down_command(char *pJsonMQTTBuffer,uint16_t pJsonMQTT
 				strncpy(cmd, pJsonMQTTBuffer + t[i + 1].start, t[i + 1].end - t[i + 1].start);
 				if (strstr(cmd,"read") != NULL){
 					xQueueMbMqtt.FunC = 3;
-					uint16_t value = 1;
-					xQueueMbMqtt.RegData.i8data[0] = (uint8_t)value;
-					xQueueMbMqtt.RegData.i8data[1] = (uint8_t)(value >> 8);
 				}
 				else if (strstr(cmd,"write") != NULL){
 					xQueueMbMqtt.FunC = 6;
@@ -719,7 +732,6 @@ uint8_t mqtt_modbus_thread_down_command(char *pJsonMQTTBuffer,uint16_t pJsonMQTT
 			}
 			else if (jsoneq(pJsonMQTTBuffer, &t[i], "value") == 0) {
 				char val[10];
-				//printf("\r\n - value: %.*s\n", t[i + 1].end - t[i + 1].start,pJsonMQTTBuffer + t[i + 1].start);
 				strncpy(val, pJsonMQTTBuffer + t[i + 1].start, t[i + 1].end - t[i + 1].start);
 				if (strstr(val,"true") != NULL || strstr(val,"on") != NULL)
 					value = 1;
@@ -732,7 +744,8 @@ uint8_t mqtt_modbus_thread_down_command(char *pJsonMQTTBuffer,uint16_t pJsonMQTT
 				i++;
 			}
 		}
-		printf("\r\n command: %d\t%d\t%d\t%d\r\n",xQueueMbMqtt.NodeID,xQueueMbMqtt.RegAdr.i16data,xQueueMbMqtt.FunC,value);
+		xQueueMbMqtt.PortID = 0;
+		printf("\r\n command: %d\t%d\t%d\t%d\r\n",xQueueMbMqtt.NodeID,xQueueMbMqtt.RegAdr.i16data,xQueueMbMqtt.FunC,xQueueMbMqtt.RegData.i16data);
 		BaseType_t Err = pdFALSE;
 		Err = xQueueSend(xQueueDownlinkHandle, &xQueueMbMqtt,portDEFAULT_WAIT_TIME);
 		if (Err == pdPASS) {

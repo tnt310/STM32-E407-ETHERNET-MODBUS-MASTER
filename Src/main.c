@@ -137,9 +137,9 @@ int main(void)
 	printf("\r\n ********* Access Controller Board **************** \r\n");
 	printf("\r\n TRAN NGOC TRAM ne\r\n");
 	printf("\r\n System  starting \r\n");
-	__disable_irq();
-	xFlashLoad();
-	__enable_irq();
+//	__disable_irq();
+//	xFlashLoad();
+//	__enable_irq();
   /* USER CODE END 2 */
   /* Call init function for freertos objects (in freertos.c) */
   MX_FREERTOS_Init();

@@ -17,16 +17,16 @@ uint8_t SD_Device(char buffer[200],uint8_t port,uint8_t deviceID,uint8_t func,ch
     sprintf(buffer,"{\"PORT\":%d,\"ID\":%d,\"FC\":%d,\"CHANNEL\":\"%s\",\"DEVICETYPE\":\"%s\",\"DEVICENAME\":\"%s\",\"CHANNELTITLE\":\"%s\",\"VALUETYPE\":\"%s\",\"NUMREG\":%d,\"SCALE\":%d\"DEVICESTATUS\":%d}\n",port,deviceID,func,deviceChannel,deviceType,deviceName,deviceTitle,valueType,numreg,scale,devicestatus);
 }
 //{"network":{"ip":"192.168.100.111","netmask":"255.255.255.0","gateway":"192.168.100.1","broker":"95.111.195.76"}}
-uint8_t SD_Network(char buffer[200],char *ip, char *netmask, char *gateway, char *broker)
+uint8_t SD_Network(char buffer[200],char *ip, char *netmask, char *gateway)
 {
     memset(buffer,'\0',200);
-    sprintf(buffer,"{\"network\":{\"ip\":\"%s\",\"netmask\":\"%s\",\"gateway\":\"%s\",\"broker\":\"%s\"}}\n",ip, netmask, gateway, broker);
+    sprintf(buffer,"{\"network\":{\"ip\":\"%s\",\"netmask\":\"%s\",\"gateway\":\"%s\"}}\n",ip, netmask, gateway);
 }
 /* {"mqttId":"null","username":"null","pwd":"null","port":1883,"apikey":"60cda6bc55193093bbcd001f"}*/
-uint8_t SD_Mqtt(char buffer[200],uint16_t mqtt_port,char *mqttId,char *username,char *pwd,char *apikey)
+uint8_t SD_Mqtt(char buffer[200],uint16_t mqtt_port,char *mqttId,char *username,char *pwd, char *broker)
 {
     memset(buffer,'\0',200);
-    sprintf(buffer,"{\"mqtt\":{\"mqttId\":\"%s\",\"username\":\"%s\",\"pwd\":\"%s\",\"port\":%d,\"apikey\":\"%s\"}}\n",mqttId,username,pwd,mqtt_port,apikey);
+    sprintf(buffer,"{\"mqtt\":{\"broker\":\"%s\",\"mqttId\":\"%s\",\"username\":\"%s\",\"pwd\":\"%s\",\"port\":%d}}\n", broker, mqttId,username,pwd,mqtt_port);
 }
 /*
  * baud = 1200xhs(4800, 9600, 19200, 115200)*/

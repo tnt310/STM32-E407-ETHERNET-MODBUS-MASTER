@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include "sdcard.h"
 #include "time_value.h"
+#include <stdint.h>
 
 extern network_param_t netParam;
 extern network_param_t mqttHostParam;
@@ -79,8 +80,7 @@ int Cmd_delete_line(int argc, char *argv[]);
 int Cmd_check_record(int argc, char *argv[]);
 int Cmd_list_test(int argc, char *argv[]);
 int Cmd_set_telemetry(int argc, char *argv[]);
-int Cmd_send_telemetry(int argc, char *argv[]);
-int Cmd_off_telemetry(int argc, char *argv[]);
+
 
 tCmdLineEntry g_psCmdTable[] = {
 		{ "checkrecord",Cmd_check_record," : Send provision request" },
@@ -113,8 +113,6 @@ tCmdLineEntry g_psCmdTable[] = {
 		{ "nano",Cmd_read_file," : Send provision request" },
 		{ "ls",Cmd_list_file," : Send provision request" },
 		{ "test",Cmd_list_test," : Send provision request" },
-		{ "sendtelemetry",Cmd_send_telemetry," : Send provision request" },
-		{ "offtelemetry",Cmd_off_telemetry," : Send provision request" },
 
 		{ 0, 0, 0 } };
 
@@ -654,21 +652,21 @@ int Cmd_set_network(int argc, char *argv[]) // timeout: 15s, 30s, 1p, 3p, 5p, 10
 	char *ip = *(argv+1);
 	char *netmask = *(argv+2);
 	char *gateway = *(argv+3);
-	char *broker = *(argv+4);
 	char buffer[200];
-	SD_Network(buffer, ip, netmask, gateway, broker);
+	SD_Network(buffer, ip, netmask, gateway);
 	printf("\r\n network is set: %s\r\n",buffer);
 	overwrite_file("config.txt",buffer, 0);
 }
 int Cmd_set_mqttInfo(int argc, char *argv[]) // timeout: 15s, 30s, 1p, 3p, 5p, 10p
 {
+	char *broker = *(argv+4);
 	char *id = *(argv+1);
 	char *username = *(argv+2);
 	char *pwd = *(argv+3);
 	uint16_t port = atoi(*(argv+4));
 	char *apikey = *(argv+5);
 	char buffer[200];
-	SD_Mqtt(buffer, port,id, username, pwd, apikey);
+	SD_Mqtt(buffer, port,id, username, pwd, broker);
 	printf("\r\n mqttInfo is set: %s\r\n",buffer);
 	overwrite_file("config.txt",buffer, 1);
 }
@@ -751,7 +749,6 @@ void ftoa(char buffer[20], char string[20], uint16_t scale)
 	char temp, temp1, temp2;
 	char val[20];
 	memset(val,'\0',sizeof(val));
-	strncpy(val,string,strlen(string));
 	memset(buffer,'\0',sizeof(buffer));
 	for (uint8_t i = 0; i < strlen(string); i++){
 		buffer[i] = string[i];
@@ -760,12 +757,26 @@ void ftoa(char buffer[20], char string[20], uint16_t scale)
 		temp = buffer[strlen(string)-1];
 		buffer[strlen(string)-1] = '.';
 		buffer[strlen(string)] = temp;
+//		if (buffer[0] == '.'){
+//			for (uint8_t i = 0; i < strlen(string)+1; i++){
+//				val[i+1] = buffer[i];
+//			}
+//			val[0] = '0';
+//			printf("\r\n Val = %s\r\n",val);
+//		}
 	}else if (scale == 100) {
 		temp = buffer[strlen(string) -2];
 		temp1 = buffer[strlen(string) -1];
 		buffer[strlen(string) -2] = '.';
 		buffer[strlen(string) -1] = temp;
 		buffer[strlen(string)] = temp1;
+//		if (buffer[0] == '.'){
+//			for (uint8_t i = 0; i < strlen(string)+1; i++){
+//				val[i+1] = buffer[i];
+//			}
+//			val[0] = '0';
+//			//printf("\r\n Val = %s\r\n",val);
+//		}
 	}
 	else if (scale == 1000){
 		temp = buffer[strlen(string) -3]; // 3
@@ -775,48 +786,33 @@ void ftoa(char buffer[20], char string[20], uint16_t scale)
 		buffer[strlen(string) -2] = temp;//3
 		buffer[strlen(string) - 1] = temp1; //4
 		buffer[strlen(string)] = temp2;  // 5
+//		if (buffer[0] == '.'){
+//			for (uint8_t i = 0; i < strlen(string)+1; i++){
+//				buf[i+1] = buffer[i];
+//			}
+//			buf[0] = '0';
+//		}
 	}
 }
 int Cmd_list_test(int argc, char *argv[])
 {
 	printf("\nCmd_list_test\r\n");
 	printf("------------------\r\n");
-	xQueueMbMqtt_t xQueueMbMqtt;
-	BaseType_t Err = pdFALSE;
-	if (CheckRecord("record.txt") == 1){
-		xQueueMbMqtt.gotflagLast = 1;
-		Err = xQueueSend(xQueueUplinkHandle, &xQueueMbMqtt,1000);
-		if (Err == pdPASS){
-			xQueueMbMqtt.gotflagLast = 0;
-		}
-	}
+	//long long i = 123456789123;
+	uint64_t i = 123456789123;
+	//ftoa(s, char, scale)
+	//char *s = itoa_user(i, 10);
+	//printf("\r\n Size: %lld\r\n",i);
+//	xQueueMbMqtt_t xQueueMbMqtt;
+//	BaseType_t Err = pdFALSE;
+//	if (CheckRecord("record.txt") == 1){
+//		xQueueMbMqtt.gotflagLast = 1;
+//		Err = xQueueSend(xQueueUplinkHandle, &xQueueMbMqtt,1000);
+//		if (Err == pdPASS){
+//			xQueueMbMqtt.gotflagLast = 0;
+//		}
+//	}
 }
-int Cmd_send_telemetry(int argc, char *argv[])
-{
-	printf("\nCmd_send_telemetry\r\n");
-	printf("------------------\r\n");
-	printf("\r\n NUMBER OF DEVICE: %d\r\n",num_device);
-	xQueueMbMqtt_t xQueueMbMqtt;
-	BaseType_t Err = pdFALSE;
-	#define portDEFAULT_WAIT_TIME 1000
-	xQueueMbMqtt.gotflagMosbusTask = 1;
-	xQueueMbMqtt.sum_dev = num_device;
-	Err = xQueueSend(xQueueUplinkHandle, &xQueueMbMqtt,portDEFAULT_WAIT_TIME);
-	if (Err == pdPASS) {
-			printf("\r\nSend: Ok\r\n");
-		}
-}
-int Cmd_off_telemetry(int argc, char *argv[]) {
-	printf("\nCmd_off_telemetry\r\n");
-	printf("------------------\r\n");
-	xQueueMbMqtt_t xQueueMbMqtt;
-	BaseType_t Err = pdFALSE;
-	#define portDEFAULT_WAIT_TIME 1000
-	xQueueMbMqtt.gotflagMosbusTask = 0;
-	xQueueMbMqtt.sum_dev = num_device;
-	Err = xQueueSend(xQueueUplinkHandle, &xQueueMbMqtt,portDEFAULT_WAIT_TIME);
-	if (Err == pdPASS) {
-			printf("\r\nSend: Ok\r\n");
-		}
-}
+
+
 

@@ -12,7 +12,9 @@ typedef struct
 	uint8_t topic[10];
 	uint8_t user[10];
 	uint8_t password[10];
+
 }mqtt_info_t;
+
 extern char *mqtt_id;
 extern char *mqtt_user;
 extern char *mqtt_password;

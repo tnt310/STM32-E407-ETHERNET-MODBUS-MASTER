@@ -254,7 +254,7 @@ void MX_FREERTOS_Init(void) {
 void StartDefaultTask(void const * argument)
 {
   /* init code for LWIP */
-//	MX_LWIP_Init();
+//	LoadSdcard("config.txt");
   /* USER CODE BEGIN StartDefaultTask */
 	/*Create Task Modules in this line*/
 

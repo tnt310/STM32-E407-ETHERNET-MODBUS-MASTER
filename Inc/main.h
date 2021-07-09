@@ -117,33 +117,59 @@ typedef struct{
 	osThreadId xTask;
 	xTaskState_t xState;
 }xQueueControl_t;
+
 typedef union
 {
 	uint16_t i16data;
 	uint8_t  i8data[2];
+}uint16toint8;
+typedef union
+{
+	int16_t i16data;
+	uint8_t  i8data[2];
 }int16toint8;
+
 typedef union
 {
 	uint32_t i32data;
 	uint8_t  i8data[4];
-
+}uint32toint8;
+typedef union
+{
+	int32_t i32data;
+	int8_t  i8data[4];
 }int32toint8;
+
+typedef union
+{
+	uint64_t i64data;
+	uint8_t  i8data[8];
+}uint64toint8;
+typedef union
+{
+	int64_t i64data;
+	int8_t  i8data[8];
+}int64toint8;
+
 typedef struct{
 	uint8_t  PortID;
 	uint8_t  NodeID;
 	uint8_t  FunC;
-	int16toint8 RegAdr;
-	int16toint8 RegData;
-	int32toint8 RegData32;
+	uint16_t scale;
+	uint16toint8 RegAdr;
+	uint16toint8 RegData;
+	uint32toint8 RegData32;
+	uint64toint8 RegData64;
+	int16toint8 IRegData;
+	int32toint8 IRegData32;
+	int64toint8 IRegData64;
 	uint8_t gotflagProvision;
-	uint8_t gotflagcommand;
-	uint8_t gotflagMosbusTask;
 	uint8_t gotflagtelemetry;
+	uint8_t gotflagcommand;
 	uint8_t gotflagLast;
-	uint8_t mutex;
 	uint8_t sum_dev;
 	uint8_t flag32;
-	uint16_t scale;
+	uint8_t flag64;
 }xQueueMbMqtt_t;
 
 enum {

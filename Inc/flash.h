@@ -83,7 +83,7 @@ uint32_t port1_baud,port1_stop,port1_databit,port1_parity;
 void xFlashLoad(void) ;
 void xFlashSave(void) ;
 
-uint8_t* itoa_user(uint32_t val, uint8_t base );
+char *itoa_user(uint64_t val, uint8_t base);
 
 
 #endif

@@ -177,7 +177,7 @@ void xFlashSave(void) {
  * @param
  * @retval None
  */
-uint8_t* itoa_user(uint32_t val, uint8_t base) {
+char *itoa_user(uint64_t val, uint8_t base) {
 	static uint8_t buf[32] = { 0 };  // 32 bits
 	int i = 30;
 	if (val == 0)
