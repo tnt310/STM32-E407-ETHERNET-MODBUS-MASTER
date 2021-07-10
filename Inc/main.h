@@ -120,6 +120,11 @@ typedef struct{
 
 typedef union
 {
+	uint8_t i8data[4];
+	float f_loat;
+}uint32tofloat;
+typedef union
+{
 	uint16_t i16data;
 	uint8_t  i8data[2];
 }uint16toint8;
@@ -163,6 +168,8 @@ typedef struct{
 	int16toint8 IRegData;
 	int32toint8 IRegData32;
 	int64toint8 IRegData64;
+	uint32tofloat Floatdata;
+	uint8_t gotflagvalue;
 	uint8_t gotflagProvision;
 	uint8_t gotflagtelemetry;
 	uint8_t gotflagcommand;
@@ -196,6 +203,7 @@ typedef struct{
    char *deviceName;
    char *channeltitle;
    char *valueType;
+   char *regtype;
 }data1_t;
 
 extern data1_t *dynamic;

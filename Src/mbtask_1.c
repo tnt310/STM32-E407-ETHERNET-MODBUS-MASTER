@@ -199,6 +199,7 @@ eMBErrorCode eMBMasterRegHoldingCB(UCHAR ucPort, UCHAR * pucRegBuffer, USHORT us
 						pusRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
 						iRegIndex++;
 						usNRegs--;
+						xQueueMbMqtt.gotflagvalue = 1;
 						printf("\r\n U16 on CB : %d \r\n",xQueueMbMqtt.IRegData.i16data);
 					}else if (bit == 0){
 					    xQueueMbMqtt.RegData.i8data[1] = *(pucRegBuffer);  // byte 1
@@ -207,13 +208,30 @@ eMBErrorCode eMBMasterRegHoldingCB(UCHAR ucPort, UCHAR * pucRegBuffer, USHORT us
 						pusRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
 						iRegIndex++;
 						usNRegs--;
+						xQueueMbMqtt.gotflagvalue = 0;
 						printf("\r\n U16 on CB : %d \r\n",xQueueMbMqtt.RegData.i16data);
 					}
 					//printf("\r\n Dich bit : %d \r\n",a);
 					//printf("\r\n Dich bit Value+1: %x \r\n",*(pucRegBuffer + 1));
 					//printf("\r\n Dich bit Value: %x \r\n",*(pucRegBuffer));
 				}
-				else if (reg_temp == 2){ // with U32, I32
+				else if (reg_temp == 2){ // with U32, I32, FLOAT32
+//					xQueueMbMqtt.Floatdata.i8data[1] = *(pucRegBuffer);  // byte 1
+//					xQueueMbMqtt.Floatdata.i8data[0] = *(pucRegBuffer + 1);// byte 0
+//					pusRegHoldingBuf[iRegIndex] = *pucRegBuffer++ << 8;
+//					pusRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
+//					iRegIndex++;
+//					usNRegs--;
+//					xQueueMbMqtt.Floatdata.i8data[3] = *(pucRegBuffer);  // byte 1
+//					xQueueMbMqtt.Floatdata.i8data[2] = *(pucRegBuffer + 1);// byte 0
+//					pusRegHoldingBuf[iRegIndex] = *pucRegBuffer++ << 8;
+//					pusRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
+//					iRegIndex++;
+//					usNRegs--;
+//					char buffer[20];
+//					memset(buffer,'\0',20);
+//					sprintf(buffer,"%f",xQueueMbMqtt.Floatdata.f_loat);
+//					printf("\r\n Convert float: %s \r\n",buffer);
 					xQueueMbMqtt.RegData32.i8data[1] = *(pucRegBuffer);  // byte 1
 					xQueueMbMqtt.RegData32.i8data[0] = *(pucRegBuffer + 1);// byte 0
 					pusRegHoldingBuf[iRegIndex] = *pucRegBuffer++ << 8;
@@ -231,6 +249,7 @@ eMBErrorCode eMBMasterRegHoldingCB(UCHAR ucPort, UCHAR * pucRegBuffer, USHORT us
 						pusRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
 						iRegIndex++;
 						usNRegs--;
+						xQueueMbMqtt.gotflagvalue = 1;
 						printf("\r\n I32 on CB : %d \r\n",xQueueMbMqtt.IRegData32.i32data);
 					}else if (bit == 0){
 						xQueueMbMqtt.RegData32.i8data[3] = *(pucRegBuffer);  // byte 1
@@ -239,6 +258,7 @@ eMBErrorCode eMBMasterRegHoldingCB(UCHAR ucPort, UCHAR * pucRegBuffer, USHORT us
 						pusRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
 						iRegIndex++;
 						usNRegs--;
+						xQueueMbMqtt.gotflagvalue = 0;
 						printf("\r\n U32 on CB : %d \r\n",xQueueMbMqtt.RegData32.i32data);
 					}
 					xQueueMbMqtt.flag32 = 1;
@@ -276,6 +296,7 @@ eMBErrorCode eMBMasterRegHoldingCB(UCHAR ucPort, UCHAR * pucRegBuffer, USHORT us
 						pusRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
 						iRegIndex++;
 						usNRegs--;
+						printf("\r\n I64 on CB : %d \r\n",xQueueMbMqtt.IRegData64.i64data);
 					}else if (bit == 0){
 						xQueueMbMqtt.RegData64.i8data[7] = *(pucRegBuffer);  // byte 1
 						xQueueMbMqtt.RegData64.i8data[6] = *(pucRegBuffer + 1);// byte 0
@@ -283,6 +304,7 @@ eMBErrorCode eMBMasterRegHoldingCB(UCHAR ucPort, UCHAR * pucRegBuffer, USHORT us
 						pusRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
 						iRegIndex++;
 						usNRegs--;
+						printf("\r\n U64 on CB : %d \r\n",xQueueMbMqtt.RegData64.i64data);
 					}
 					xQueueMbMqtt.flag64 = 1;
 				}
@@ -320,13 +342,14 @@ eMBErrorCode eMBMasterRegHoldingCB(UCHAR ucPort, UCHAR * pucRegBuffer, USHORT us
 	 	 	 read_mutex = 0;
 	 	 	 write_mutex = 0;
 		}
-//		BaseType_t Err = pdFALSE;
-//		Err = xQueueSend(xQueueUplinkHandle, &xQueueMbMqtt,portDEFAULT_WAIT_TIME);
-//		if (Err == pdPASS) {
-//			xQueueMbMqtt.gotflagtelemetry = 0;
-//			} else {
-//			printf("\r\n Modbus_MQTT Up queued: False \r\n");
-//		}
+		BaseType_t Err = pdFALSE;
+		Err = xQueueSend(xQueueUplinkHandle, &xQueueMbMqtt,portDEFAULT_WAIT_TIME);
+		if (Err == pdPASS) {
+			xQueueMbMqtt.gotflagtelemetry = 0;
+			xQueueMbMqtt.gotflagvalue = 0;
+			} else {
+			printf("\r\n Modbus_MQTT Up queued: False \r\n");
+		}
 	}
 	else {
 		eStatus = MB_ENOREG;

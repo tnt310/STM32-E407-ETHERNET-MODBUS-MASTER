@@ -53,6 +53,7 @@ FRESULT fresult,fre;
 /* Private Variables -------------------------*/
 uint8_t mqtt_couter_err = 0;
 char buffer[100];
+char regtype[20];
 char temp[20];
 char temp0[10];
 char temp1[20];
@@ -93,68 +94,6 @@ static int jsoneq(const char *json, jsmntok_t *tok, const char *s) {
 	return -1;
 }
 
-uint8_t parse_device_provision(char *Buffer, uint16_t BufferLen, uint8_t deviceID, uint16_t channelID, uint8_t channel_status)
-{
-	uint8_t tempID = 0;
-	uint16_t tempchannelID = 0;
-	char buffer[200];
-	ptr = &test;
-	int r;
-	jsmn_parser p;
-	jsmntok_t t[JSON_MAX_LEN]; /* We expect no more than JSON_MAX_LEN tokens */
-	jsmn_init(&p);
-	r = jsmn_parse(&p, Buffer,BufferLen, t,sizeof(t) / sizeof(t[0]));
-	for (uint8_t i = 1; i < r; i++) {
-		if (jsoneq(Buffer, &t[i], "PORT") == 0) {
-			ptr->channel = atoi(Buffer + t[i + 1].start);
-			i++;
-		} else if (jsoneq(Buffer, &t[i], "ID") == 0) {
-			tempID = (uint8_t)atoi(Buffer + t[i + 1].start);
-			i++;
-		} else if (jsoneq(Buffer, &t[i], "FC") == 0) {
-			ptr->func = (uint8_t)atoi(Buffer + t[i + 1].start);
-			i++;
-		} else if (jsoneq(Buffer, &t[i], "CHANNEL") == 0) {
-			memset(temp0,'\0',sizeof(temp0));
-			strncpy(temp0,Buffer + t[i + 1].start, t[i + 1].end - t[i + 1].start);
-			tempchannelID = (uint16_t)strtol(temp0, NULL, 0);
-			i++;
-		} else if (jsoneq(Buffer, &t[i], "DEVICETYPE") == 0) {
-			memset(temp,'\0',sizeof(temp));
-			strncpy(temp,Buffer + t[i + 1].start, t[i + 1].end - t[i + 1].start);
-			ptr->deviceType = temp;
-			i++;
-		} else if (jsoneq(Buffer, &t[i], "DEVICENAME") == 0) {
-			memset(temp1,'\0',sizeof(temp));
-			strncpy(temp1,Buffer + t[i + 1].start, t[i + 1].end - t[i + 1].start);
-			ptr->deviceName = temp1;
-			i++;
-		} else if (jsoneq(Buffer, &t[i], "CHANNELTITLE") == 0) {
-			memset(temp2,'\0',sizeof(temp2));
-			strncpy(temp2,Buffer + t[i + 1].start, t[i + 1].end - t[i + 1].start);
-			ptr->channeltitle = temp2;
-			i++;
-		}else if (jsoneq(Buffer, &t[i], "VALUETYPE") == 0) {
-			memset(temp3,'\0',sizeof(temp3));
-			strncpy(temp3,Buffer + t[i + 1].start, t[i + 1].end - t[i + 1].start);
-			ptr->valueType= temp3;
-			i++;
-		}else if (jsoneq(Buffer, &t[i], "NUMREG") == 0) {
-			ptr->numreg = (uint8_t)atoi(Buffer + t[i + 1].start);
-			i++;
-		}else if (jsoneq(Buffer, &t[i], "SCALE") == 0) {
-			ptr->scale = (uint16_t)atoi(Buffer + t[i + 1].start);
-			i++;
-		}
-	}
-	if (tempID == deviceID && tempchannelID == channelID){
-		ptr->devicestatus = channel_status;
-		SD_Device(buffer,ptr->channel, deviceID,ptr->func,channelID,ptr->deviceType,ptr->channeltitle,ptr->deviceName,ptr->valueType,channel_status,ptr->scale, ptr->numreg);
-		printf("\r\n buffer: %s\r\n",buffer);
-		//return ptr;
-	}else
-		return 0;
-}
 /*-----------------------------------------PARSING DATA FROM SDCARD-----------------------------------------------------------------------------*/
 void parse_sdcardInfo(char *Buffer, uint16_t BufferLen)
 {
@@ -368,6 +307,11 @@ data1_t *parse_device(char *Buffer, uint16_t BufferLen)
 		} else if (jsoneq(Buffer, &t[i], "DEVICESTATUS") == 0) {
 			ptr->devicestatus = atoi(Buffer + t[i + 1].start);
 			i++;
+		}else if (jsoneq(Buffer, &t[i], "REGTYPE") == 0) {
+			memset(regtype,'\0',sizeof(regtype));
+			strncpy(regtype,Buffer + t[i + 1].start, t[i + 1].end - t[i + 1].start);
+			ptr->regtype = regtype;
+			i++;
 		}
 	}
 	return ptr;
@@ -386,6 +330,7 @@ void addDevice(data1_t *destination, data1_t *data)
    destination->deviceName = allocate(data->deviceName);
    destination->channeltitle = allocate(data->channeltitle);
    destination->valueType = allocate(data->valueType);
+   destination->regtype = allocate(data->regtype);
 }
 
 /*---------------------------------------------------MODBUS MQTT BRIGDE FUNCTION-----------------------------------------------------------------------------*/
@@ -471,14 +416,23 @@ void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_top
 					}
 				}else if (xQueueMbMqtt.gotflagcommand == 3){  // check command
 				if (xQueueMbMqtt.FunC == 3){
-					if (xQueueMbMqtt.flag32 == 1){
-						xQueueMbMqtt.flag32 = 0;
-					    memset(res,'\0',sizeof(res));
-					    memset(ftoastr,'\0',sizeof(ftoastr));
-						sprintf(res,"%d",xQueueMbMqtt.RegData32.i32data);
-						ftoa(ftoastr, res, xQueueMbMqtt.scale);
-						command_read_json(head, xQueueMbMqtt.NodeID, xQueueMbMqtt.RegAdr.i16data,ftoastr);
-					}else if(xQueueMbMqtt.flag64 == 1){
+					if (xQueueMbMqtt.flag32 == 1){  // U32, I32
+						if (xQueueMbMqtt.gotflagvalue == 1){
+							xQueueMbMqtt.flag32 = 0;
+						    memset(res,'\0',sizeof(res));
+						    memset(ftoastr,'\0',sizeof(ftoastr));
+							sprintf(res,"%d",xQueueMbMqtt.IRegData32.i32data);
+							ftoa(ftoastr, res, xQueueMbMqtt.scale);
+							command_read_json(head, xQueueMbMqtt.NodeID, xQueueMbMqtt.RegAdr.i16data,ftoastr);
+						}else if (xQueueMbMqtt.gotflagvalue == 0){
+							xQueueMbMqtt.flag32 = 0;
+						    memset(res,'\0',sizeof(res));
+						    memset(ftoastr,'\0',sizeof(ftoastr));
+							sprintf(res,"%d",xQueueMbMqtt.RegData32.i32data);
+							ftoa(ftoastr, res, xQueueMbMqtt.scale);
+							command_read_json(head, xQueueMbMqtt.NodeID, xQueueMbMqtt.RegAdr.i16data,ftoastr);
+						}
+					}else if(xQueueMbMqtt.flag64 == 1){  // U64, I64
 						xQueueMbMqtt.flag64 = 0;
 					    memset(res,'\0',sizeof(res));
 					    memset(ftoastr,'\0',sizeof(ftoastr));
@@ -486,18 +440,27 @@ void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_top
 					    printf("\r\n Command value: %s",s);
 					    ftoa(ftoastr, itoa_user(xQueueMbMqtt.RegData64.i64data, 10), 1000);
 						command_read_json(head, xQueueMbMqtt.NodeID, xQueueMbMqtt.RegAdr.i16data,ftoastr);
-					}else{
-					    memset(res,'\0',sizeof(res));
-					    memset(ftoastr,'\0',sizeof(ftoastr));
-						sprintf(res,"%d",xQueueMbMqtt.RegData.i16data);
-						printf("\r\n res data: %s with lent: %d \r\n",res, strlen(res));
-						ftoa(ftoastr, res, 1000);
-						printf("\r\n ftoastr data: %s \r\n",ftoastr);
-						command_read_json(head, xQueueMbMqtt.NodeID, xQueueMbMqtt.RegAdr.i16data,ftoastr);
+					}else{   // U16, I16
+						if (xQueueMbMqtt.gotflagvalue == 1){
+						    memset(res,'\0',sizeof(res));
+						    memset(ftoastr,'\0',sizeof(ftoastr));
+							sprintf(res,"%d",xQueueMbMqtt.IRegData.i16data);
+							ftoa(ftoastr, res, 1000);
+							command_read_json(head, xQueueMbMqtt.NodeID, xQueueMbMqtt.RegAdr.i16data,ftoastr);
+						}else if (xQueueMbMqtt.gotflagvalue == 0){
+						    memset(res,'\0',sizeof(res));
+						    memset(ftoastr,'\0',sizeof(ftoastr));
+							sprintf(res,"%d",xQueueMbMqtt.RegData.i16data);
+							printf("\r\n res data: %s with lent: %d \r\n",res, strlen(res));
+							ftoa(ftoastr, res, 1000);
+							printf("\r\n ftoastr data: %s \r\n",ftoastr);
+							command_read_json(head, xQueueMbMqtt.NodeID, xQueueMbMqtt.RegAdr.i16data,ftoastr);
+						}
 					}
 				}
-				else if (xQueueMbMqtt.FunC == 6)
+				else if (xQueueMbMqtt.FunC == 6){
 					command_write_json(head, xQueueMbMqtt.NodeID, xQueueMbMqtt.RegAdr.i16data);
+				}
 				err = mqtt_publish(client,command_topic, head,strlen(head), QOS_0, 0,mqtt_bridge_command_request_cb,NULL);
 				if (err != ERR_OK) {
 					printf("\r\n Publish command err: %d\n", err);

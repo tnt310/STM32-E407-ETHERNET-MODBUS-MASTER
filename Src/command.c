@@ -454,16 +454,16 @@ int Cmd_allocate_device(int argc, char *argv[])
 	printf("\r\nLOADING NEW DEVICE--------------------------------------------------------\r\n");
 	for (uint8_t i = 0; i < num_device; i++)
 	{
-	   printf("\r\nDevice %d: %d\t%d\t%d\t%d\t%d\t%d\t%d\t%s\t%s\t%s\t%s",i,(dynamic+i)->channel,(dynamic+i)->deviceID,(dynamic+i)->func,(dynamic+i)->devicestatus,
+	   printf("\r\nDevice %d: %d\t%d\t%d\t%d\t%d\t%d\t%d\t%s\t%s\t%s\t%s\t%s",i,(dynamic+i)->channel,(dynamic+i)->deviceID,(dynamic+i)->func,(dynamic+i)->devicestatus,
 			   (dynamic+i)->numreg,(dynamic+i)->scale,(dynamic+i)->deviceChannel,(dynamic+i)->deviceType,(dynamic+i)->deviceName,
-			   (dynamic+i)->channeltitle,(dynamic+i)->valueType);
+			   (dynamic+i)->channeltitle,(dynamic+i)->valueType,(dynamic+i)->regtype);
 	}
 	printf("\r\nADDRESS OFF NEW DEVICE--------------------------------------------------------\r\n");
 	for (uint8_t i = 0; i < num_device; i++)
 	{
-		   printf("\r\nDevice %d: %d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d",i,&(dynamic+i)->channel,&(dynamic+i)->deviceID,&(dynamic+i)->func,&(dynamic+i)->devicestatus,
+		   printf("\r\nDevice %d: %d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d",i,&(dynamic+i)->channel,&(dynamic+i)->deviceID,&(dynamic+i)->func,&(dynamic+i)->devicestatus,
 				   &(dynamic+i)->numreg,&(dynamic+i)->scale,&(dynamic+i)->deviceChannel,&(dynamic+i)->deviceType,&(dynamic+i)->deviceName,
-				   &(dynamic+i)->channeltitle,&(dynamic+i)->valueType);
+				   &(dynamic+i)->channeltitle,&(dynamic+i)->valueType,&(dynamic+i)->regtype);
 	}
 	printf("\r\n");
 }
