@@ -11,10 +11,12 @@
 #include "modbus_mqtt_bridge.h"
 #include "fatfs.h"
 #include <stdlib.h>
+#include <math.h>
 #include <stdio.h>
 #include "sdcard.h"
 #include "time_value.h"
 #include <stdint.h>
+
 
 extern network_param_t netParam;
 extern network_param_t mqttHostParam;
@@ -78,8 +80,8 @@ int Cmd_set_channelstatus(int argc, char *argv[]);
 int Cmd_delete_channel(int argc, char *argv[]);
 int Cmd_delete_line(int argc, char *argv[]);
 int Cmd_check_record(int argc, char *argv[]);
-int Cmd_list_test(int argc, char *argv[]);
 int Cmd_set_telemetry(int argc, char *argv[]);
+int Cmd_test(int argc, char *argv[]);
 
 
 tCmdLineEntry g_psCmdTable[] = {
@@ -112,8 +114,7 @@ tCmdLineEntry g_psCmdTable[] = {
 		{ "rm",Cmd_delete_file," : Send provision request" },
 		{ "nano",Cmd_read_file," : Send provision request" },
 		{ "ls",Cmd_list_file," : Send provision request" },
-		{ "test",Cmd_list_test," : Send provision request" },
-
+		{ "test",Cmd_test," : Send provision request" },
 		{ 0, 0, 0 } };
 
 const char * ErrorCode[4] = { "CMDLINE_BAD_CMD", "CMDLINE_TOO_MANY_ARGS",
@@ -754,65 +755,106 @@ void ftoa(char buffer[20], char string[20], uint16_t scale)
 		buffer[i] = string[i];
 	}
 	if (scale == 10) {
-		temp = buffer[strlen(string)-1];
-		buffer[strlen(string)-1] = '.';
-		buffer[strlen(string)] = temp;
-//		if (buffer[0] == '.'){
-//			for (uint8_t i = 0; i < strlen(string)+1; i++){
-//				val[i+1] = buffer[i];
-//			}
-//			val[0] = '0';
-//			printf("\r\n Val = %s\r\n",val);
-//		}
+		if (strlen(buffer) == 1){
+			buffer[2]=buffer[0];
+			buffer[1]='.';
+			buffer[0]='0';
+		}else{
+			temp = buffer[strlen(string)-1];
+			buffer[strlen(string)-1] = '.';
+			buffer[strlen(string)] = temp;
+		}
 	}else if (scale == 100) {
-		temp = buffer[strlen(string) -2];
-		temp1 = buffer[strlen(string) -1];
-		buffer[strlen(string) -2] = '.';
-		buffer[strlen(string) -1] = temp;
-		buffer[strlen(string)] = temp1;
-//		if (buffer[0] == '.'){
-//			for (uint8_t i = 0; i < strlen(string)+1; i++){
-//				val[i+1] = buffer[i];
-//			}
-//			val[0] = '0';
-//			//printf("\r\n Val = %s\r\n",val);
-//		}
-	}
-	else if (scale == 1000){
-		temp = buffer[strlen(string) -3]; // 3
-		temp1 = buffer[strlen(string) -2]; // 4
-		temp2 = buffer[strlen(string) -1];  // 5
-		buffer[strlen(string) -3] = '.';
-		buffer[strlen(string) -2] = temp;//3
-		buffer[strlen(string) - 1] = temp1; //4
-		buffer[strlen(string)] = temp2;  // 5
-//		if (buffer[0] == '.'){
-//			for (uint8_t i = 0; i < strlen(string)+1; i++){
-//				buf[i+1] = buffer[i];
-//			}
-//			buf[0] = '0';
-//		}
+		if (strlen(buffer) < 3){
+			if (strlen(buffer) == 1){
+				buffer[3]=buffer[0];
+				buffer[2]='0';
+				buffer[1]='.';
+				buffer[0]='0';
+			}else if (strlen(buffer) == 2){
+				buffer[3]=buffer[1];
+				buffer[2]=buffer[0];
+				buffer[1]='.';
+				buffer[0]='0';
+			}
+		}else {
+			temp = buffer[strlen(string) -2];
+			temp1 = buffer[strlen(string) -1];
+			buffer[strlen(string) -2] = '.';
+			buffer[strlen(string) -1] = temp;
+			buffer[strlen(string)] = temp1;
+		}
+	}else if (scale == 1000){
+		if (strlen(buffer) < 4){
+			if (strlen(buffer) == 1){
+				buffer[4]=buffer[0];
+				buffer[3]='0';
+				buffer[2]='0';
+				buffer[1]='.';
+				buffer[0]='0';
+			}else if (strlen(buffer) == 2){
+				buffer[4]=buffer[1];
+				buffer[3]=buffer[0];
+				buffer[2]='0';
+				buffer[1]='.';
+				buffer[0]='0';
+			}else if (strlen(buffer) == 3){
+				buffer[4]=buffer[2];
+				buffer[3]=buffer[1];
+				buffer[2]=buffer[0];
+				buffer[1]='.';
+				buffer[0]='0';
+			}
+		}else {
+			temp = buffer[strlen(string) -3];
+			temp1 = buffer[strlen(string) -2];
+			temp2 = buffer[strlen(string) -1];
+			buffer[strlen(string) -3] = '.';
+			buffer[strlen(string) -2] = temp;
+			buffer[strlen(string) - 1] = temp1;
+			buffer[strlen(string)] = temp2;
+		}
 	}
 }
-int Cmd_list_test(int argc, char *argv[])
+
+static float ConvertNumberToFloat(unsigned long number, int isDoublePrecision)
 {
-	printf("\nCmd_list_test\r\n");
-	printf("------------------\r\n");
-	//long long i = 123456789123;
-	uint64_t i = 123456789123;
-	//ftoa(s, char, scale)
-	//char *s = itoa_user(i, 10);
-	//printf("\r\n Size: %lld\r\n",i);
-//	xQueueMbMqtt_t xQueueMbMqtt;
-//	BaseType_t Err = pdFALSE;
-//	if (CheckRecord("record.txt") == 1){
-//		xQueueMbMqtt.gotflagLast = 1;
-//		Err = xQueueSend(xQueueUplinkHandle, &xQueueMbMqtt,1000);
-//		if (Err == pdPASS){
-//			xQueueMbMqtt.gotflagLast = 0;
-//		}
-//	}
+    int mantissaShift = isDoublePrecision ? 52 : 23;
+    unsigned long exponentMask = isDoublePrecision ? 0x7FF0000000000000 : 0x7f800000;
+    int bias = isDoublePrecision ? 1023 : 127;
+    int signShift = isDoublePrecision ? 63 : 31;
+    int sign = (number >> signShift) & 0x01;
+    int exponent = ((number & exponentMask) >> mantissaShift) - bias;
+    int power = -1;
+    float total = 0.0;
+    for ( int i = 0; i < mantissaShift; i++ ){
+        int calc = (number >> (mantissaShift-i-1)) & 0x01;
+        total += calc * pow(2.0, power);
+        power--;
+    }
+    float value = (sign ? -1 : 1) * pow(2.0, exponent) * (total + 1.0);
+    return value;
 }
-
-
+static uint8_t FloatToString(char buffer[10], uint32_t float_value)
+{
+	memset(buffer,'\0',sizeof(buffer));
+	float temp = (float)ConvertNumberToFloat(float_value, 0);
+	sprintf(buffer,"%.3f",temp);
+}
+uint8_t Float_Domo(char buffer[10],uint32_t temp)
+{
+	taskENTER_CRITICAL();
+	memset(buffer,'\0',sizeof(buffer));
+	FloatToString(buffer, temp);
+	taskEXIT_CRITICAL();
+}
+int Cmd_test(int argc, char *argv[])
+{
+	printf("\nCmd_set_test\r\n");
+	printf("------------------\r\n");
+	char buffer[10];
+	uint32_t temp = 1067282596;
+	Float_Domo(buffer, temp);
+	printf("\r\n Floating foint: %s\r\n",buffer);
+}
 

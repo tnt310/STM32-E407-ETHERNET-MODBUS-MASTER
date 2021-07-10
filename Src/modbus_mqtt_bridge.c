@@ -422,14 +422,14 @@ void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_top
 						    memset(res,'\0',sizeof(res));
 						    memset(ftoastr,'\0',sizeof(ftoastr));
 							sprintf(res,"%d",xQueueMbMqtt.IRegData32.i32data);
-							ftoa(ftoastr, res, xQueueMbMqtt.scale);
+							ftoa(ftoastr, res, 1000);
 							command_read_json(head, xQueueMbMqtt.NodeID, xQueueMbMqtt.RegAdr.i16data,ftoastr);
 						}else if (xQueueMbMqtt.gotflagvalue == 0){
 							xQueueMbMqtt.flag32 = 0;
 						    memset(res,'\0',sizeof(res));
 						    memset(ftoastr,'\0',sizeof(ftoastr));
 							sprintf(res,"%d",xQueueMbMqtt.RegData32.i32data);
-							ftoa(ftoastr, res, xQueueMbMqtt.scale);
+							ftoa(ftoastr, res, 1000);
 							command_read_json(head, xQueueMbMqtt.NodeID, xQueueMbMqtt.RegAdr.i16data,ftoastr);
 						}
 					}else if(xQueueMbMqtt.flag64 == 1){  // U64, I64

@@ -216,22 +216,6 @@ eMBErrorCode eMBMasterRegHoldingCB(UCHAR ucPort, UCHAR * pucRegBuffer, USHORT us
 					//printf("\r\n Dich bit Value: %x \r\n",*(pucRegBuffer));
 				}
 				else if (reg_temp == 2){ // with U32, I32, FLOAT32
-//					xQueueMbMqtt.Floatdata.i8data[1] = *(pucRegBuffer);  // byte 1
-//					xQueueMbMqtt.Floatdata.i8data[0] = *(pucRegBuffer + 1);// byte 0
-//					pusRegHoldingBuf[iRegIndex] = *pucRegBuffer++ << 8;
-//					pusRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
-//					iRegIndex++;
-//					usNRegs--;
-//					xQueueMbMqtt.Floatdata.i8data[3] = *(pucRegBuffer);  // byte 1
-//					xQueueMbMqtt.Floatdata.i8data[2] = *(pucRegBuffer + 1);// byte 0
-//					pusRegHoldingBuf[iRegIndex] = *pucRegBuffer++ << 8;
-//					pusRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
-//					iRegIndex++;
-//					usNRegs--;
-//					char buffer[20];
-//					memset(buffer,'\0',20);
-//					sprintf(buffer,"%f",xQueueMbMqtt.Floatdata.f_loat);
-//					printf("\r\n Convert float: %s \r\n",buffer);
 					xQueueMbMqtt.RegData32.i8data[1] = *(pucRegBuffer);  // byte 1
 					xQueueMbMqtt.RegData32.i8data[0] = *(pucRegBuffer + 1);// byte 0
 					pusRegHoldingBuf[iRegIndex] = *pucRegBuffer++ << 8;
