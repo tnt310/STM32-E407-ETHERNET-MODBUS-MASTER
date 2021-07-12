@@ -163,7 +163,6 @@ typedef struct{
 	int16toint8 IRegData;
 	int32toint8 IRegData32;
 	int64toint8 IRegData64;
-	uint8_t gotflagvalue;
 	uint8_t gotflagProvision;
 	uint8_t gotflagtelemetry;
 	uint8_t gotflagcommand;
@@ -171,9 +170,7 @@ typedef struct{
 	uint8_t sum_dev;
 	uint8_t flag32;
 	uint8_t flag64;
-	uint8_t flagFloat;
-	uint8_t flagActive;
-	uint8_t flagNegative;
+	uint8_t gotflagvalue;
 }xQueueMbMqtt_t;
 
 enum {

@@ -424,19 +424,24 @@ void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_top
 				}else if (xQueueMbMqtt.gotflagcommand == 3){  // check command
 				if (xQueueMbMqtt.FunC == 3){
 					if (xQueueMbMqtt.flag32 == 1){  // U32, I32
-						if (xQueueMbMqtt.gotflagvalue == 1){
-							xQueueMbMqtt.flag32 = 0;
-						    memset(res,'\0',sizeof(res));
-						    memset(ftoastr,'\0',sizeof(ftoastr));
-							sprintf(res,"%d",xQueueMbMqtt.IRegData32.i32data);
-							ftoa(ftoastr, res, 1000);
-							command_read_json(head, xQueueMbMqtt.NodeID, xQueueMbMqtt.RegAdr.i16data,ftoastr);
-						}else if (xQueueMbMqtt.gotflagvalue == 0){
-							xQueueMbMqtt.flag32 = 0;
+						xQueueMbMqtt.flag32 = 0;
+						if (xQueueMbMqtt.gotflagvalue == 0){
 						    memset(res,'\0',sizeof(res));
 						    memset(ftoastr,'\0',sizeof(ftoastr));
 							sprintf(res,"%d",xQueueMbMqtt.RegData32.i32data);
-							ftoa(ftoastr, res, 1000);
+							ftoa(ftoastr, res, xQueueMbMqtt.scale);
+							command_read_json(head, xQueueMbMqtt.NodeID, xQueueMbMqtt.RegAdr.i16data,ftoastr);
+						}else if (xQueueMbMqtt.gotflagvalue == 1){
+						    memset(res,'\0',sizeof(res));
+						    memset(ftoastr,'\0',sizeof(ftoastr));
+							sprintf(res,"%d",xQueueMbMqtt.IRegData32.i32data);
+							ftoa(ftoastr, res, xQueueMbMqtt.scale);
+							command_read_json(head, xQueueMbMqtt.NodeID, xQueueMbMqtt.RegAdr.i16data,ftoastr);
+						}else if (xQueueMbMqtt.gotflagvalue == 2){
+						    memset(res,'\0',sizeof(res));
+						    memset(ftoastr,'\0',sizeof(ftoastr));
+						    FloatToString(res,xQueueMbMqtt.RegData32.i32data);
+							ftoa(ftoastr, res, xQueueMbMqtt.scale);
 							command_read_json(head, xQueueMbMqtt.NodeID, xQueueMbMqtt.RegAdr.i16data,ftoastr);
 						}
 					}else if(xQueueMbMqtt.flag64 == 1){  // U64, I64
@@ -448,19 +453,17 @@ void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_top
 					    ftoa(ftoastr, itoa_user(xQueueMbMqtt.RegData64.i64data, 10), 1000);
 						command_read_json(head, xQueueMbMqtt.NodeID, xQueueMbMqtt.RegAdr.i16data,ftoastr);
 					}else{   // U16, I16
-						if (xQueueMbMqtt.gotflagvalue == 1){
+						if (xQueueMbMqtt.gotflagvalue == 0){
+						    memset(res,'\0',sizeof(res));
+						    memset(ftoastr,'\0',sizeof(ftoastr));
+							sprintf(res,"%d",xQueueMbMqtt.RegData.i16data);
+							ftoa(ftoastr, res, 1000);
+							command_read_json(head, xQueueMbMqtt.NodeID, xQueueMbMqtt.RegAdr.i16data,ftoastr);
+						}else if (xQueueMbMqtt.gotflagvalue == 1){
 						    memset(res,'\0',sizeof(res));
 						    memset(ftoastr,'\0',sizeof(ftoastr));
 							sprintf(res,"%d",xQueueMbMqtt.IRegData.i16data);
 							ftoa(ftoastr, res, 1000);
-							command_read_json(head, xQueueMbMqtt.NodeID, xQueueMbMqtt.RegAdr.i16data,ftoastr);
-						}else if (xQueueMbMqtt.gotflagvalue == 0){
-						    memset(res,'\0',sizeof(res));
-						    memset(ftoastr,'\0',sizeof(ftoastr));
-							sprintf(res,"%d",xQueueMbMqtt.RegData.i16data);
-							printf("\r\n res data: %s with lent: %d \r\n",res, strlen(res));
-							ftoa(ftoastr, res, 1000);
-							printf("\r\n ftoastr data: %s \r\n",ftoastr);
 							command_read_json(head, xQueueMbMqtt.NodeID, xQueueMbMqtt.RegAdr.i16data,ftoastr);
 						}
 					}
@@ -525,11 +528,25 @@ void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_top
 			else if (xQueueMbMqtt.gotflagtelemetry == 2) {
 				if (xQueueMbMqtt.flag32 == 1){
 					xQueueMbMqtt.flag32 = 0;
-				    memset(res,'\0',sizeof(res));
-				    memset(ftoastr,'\0',sizeof(ftoastr));
-					sprintf(res,"%d",xQueueMbMqtt.RegData32.i32data);
-					ftoa(ftoastr, res, xQueueMbMqtt.scale);
-					printf("\r\nTelemetry data reg32: %d \t %d \t %s\r\n",xQueueMbMqtt.NodeID,xQueueMbMqtt.RegAdr.i16data ,ftoastr);
+					if (xQueueMbMqtt.gotflagvalue == 0){
+					    memset(res,'\0',sizeof(res));
+					    memset(ftoastr,'\0',sizeof(ftoastr));
+						sprintf(res,"%d",xQueueMbMqtt.RegData32.i32data);
+						ftoa(ftoastr, res, xQueueMbMqtt.scale);
+						printf("\r\nTelemetry data reg32: %d \t %d \t %s\r\n",xQueueMbMqtt.NodeID,xQueueMbMqtt.RegAdr.i16data ,ftoastr);
+					}else if(xQueueMbMqtt.gotflagvalue == 1){
+					    memset(res,'\0',sizeof(res));
+					    memset(ftoastr,'\0',sizeof(ftoastr));
+						sprintf(res,"%d",xQueueMbMqtt.IRegData32.i32data);
+						ftoa(ftoastr, res, xQueueMbMqtt.scale);
+						printf("\r\nTelemetry data reg32: %d \t %d \t %s\r\n",xQueueMbMqtt.NodeID,xQueueMbMqtt.RegAdr.i16data ,ftoastr);
+					}else if(xQueueMbMqtt.gotflagvalue == 2){
+					    memset(res,'\0',sizeof(res));
+					    memset(ftoastr,'\0',sizeof(ftoastr));
+					    FloatToString(res,xQueueMbMqtt.RegData32.i32data);
+						ftoa(ftoastr, res, xQueueMbMqtt.scale);
+						printf("\r\nTelemetry data Float32: %d \t %d \t %s\r\n",xQueueMbMqtt.NodeID,xQueueMbMqtt.RegAdr.i16data ,ftoastr);
+					}
 				}else if (xQueueMbMqtt.flag64 == 1){
 					xQueueMbMqtt.flag64 = 0;
 				    memset(res,'\0',sizeof(res));
@@ -539,11 +556,19 @@ void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_top
 					ftoa(ftoastr, itoa_user(xQueueMbMqtt.RegData64.i64data, 10), 10);
 					printf("\r\nTelemetry data reg64: %d \t %d \t %s\r\n",xQueueMbMqtt.NodeID,xQueueMbMqtt.RegAdr.i16data ,ftoastr);
 				}else{
-				    memset(res,'\0',sizeof(res));
-				    memset(ftoastr,'\0',sizeof(ftoastr));
-					sprintf(res,"%d",xQueueMbMqtt.RegData.i16data);
-					ftoa(ftoastr, res, xQueueMbMqtt.scale);
-					printf("\r\nTelemetry data reg16: %d \t %d \t %s\r\n",xQueueMbMqtt.NodeID,xQueueMbMqtt.RegAdr.i16data ,ftoastr);
+					if (xQueueMbMqtt.gotflagvalue == 0){
+					    memset(res,'\0',sizeof(res));
+					    memset(ftoastr,'\0',sizeof(ftoastr));
+						sprintf(res,"%d",xQueueMbMqtt.RegData.i16data);
+						ftoa(ftoastr, res, xQueueMbMqtt.scale);
+						printf("\r\nTelemetry data regU16: %d \t %d \t %s\r\n",xQueueMbMqtt.NodeID,xQueueMbMqtt.RegAdr.i16data ,ftoastr);
+					}else if (xQueueMbMqtt.gotflagvalue == 1){
+					    memset(res,'\0',sizeof(res));
+					    memset(ftoastr,'\0',sizeof(ftoastr));
+						sprintf(res,"%d",xQueueMbMqtt.IRegData.i16data);
+						ftoa(ftoastr, res, xQueueMbMqtt.scale);
+						printf("\r\nTelemetry data regI16: %d \t %d \t %s\r\n",xQueueMbMqtt.NodeID,xQueueMbMqtt.RegAdr.i16data ,ftoastr);
+					}
 				}
 			counter ++;
 			if (counter == 1) {
