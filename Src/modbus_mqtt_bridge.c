@@ -312,6 +312,13 @@ data1_t *parse_device(char *Buffer, uint16_t BufferLen)
 			strncpy(regtype,Buffer + t[i + 1].start, t[i + 1].end - t[i + 1].start);
 			ptr->regtype = regtype;
 			i++;
+			if (strstr(regtype,"UINT16") != NULL || strstr(regtype,"INT16") != NULL){
+				ptr->numreg = 1;
+				printf("\r\n Reg Type : %s with num_reg: %d \r\n",regtype, ptr->numreg);
+			}else if (strstr(regtype,"INT32") != NULL || strstr(regtype,"UINT32") != NULL || strstr(regtype,"FLOAT32") != NULL){
+				ptr->numreg = 2;
+				printf("\r\n Reg Type : %s with num_reg: %d \r\n",regtype, ptr->numreg);
+			}
 		}
 	}
 	return ptr;

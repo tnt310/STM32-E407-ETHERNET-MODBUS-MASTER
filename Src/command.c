@@ -57,30 +57,34 @@ int Cmd_set_port0(int argc, char *argv[]);
 int Cmd_set_port1(int argc, char *argv[]);
 int Cmd_set_network(int argc, char *argv[]);
 int Cmd_set_mqttInfo(int argc, char *argv[]);
+
 int Cmd_get_time(int argc, char *argv[]);
 int Cmd_off_mutex(int argc, char *argv[]);
 int Cmd_set_mutex(int argc, char *argv[]);
+int Cmd_set_config(int argc, char *argv[]);
+int Cmd_set_factory(int argc, char *argv[]);
+int Cmd_set_telemetry(int argc, char *argv[]);
+
 int Cmd_set_localip(int argc, char *argv[]);
 int Cmd_set_mqttip(int argc, char *argv[]);
 int Cmd_mqtt_port(int argc, char *argv[]);
-int Cmd_save(int argc, char *argv[]);
 int Cmd_set_localgw(int argc, char *argv[]);
 int Cmd_set_netmask(int argc, char *argv[]);
+int Cmd_save(int argc, char *argv[]);
+
 int Cmd_send_provision(int argc, char *argv[]);
 int Cmd_allocate_device(int argc, char *argv[]);
 int Cmd_delete_device(int argc, char *argv[]);
 int Cmd_set_device(int argc, char *argv[]);
-int Cmd_set_config(int argc, char *argv[]);
-int Cmd_set_factory(int argc, char *argv[]);
+
 int Cmd_delete_file(int argc, char *argv[]);
 int Cmd_new_file(int argc, char *argv[]);
 int Cmd_read_file(int argc, char *argv[]);
 int Cmd_list_file(int argc, char *argv[]);
-int Cmd_set_channelstatus(int argc, char *argv[]);
 int Cmd_delete_channel(int argc, char *argv[]);
 int Cmd_delete_line(int argc, char *argv[]);
 int Cmd_check_record(int argc, char *argv[]);
-int Cmd_set_telemetry(int argc, char *argv[]);
+
 int Cmd_test(int argc, char *argv[]);
 
 
@@ -835,26 +839,32 @@ static float ConvertNumberToFloat(unsigned long number, int isDoublePrecision)
     float value = (sign ? -1 : 1) * pow(2.0, exponent) * (total + 1.0);
     return value;
 }
-static uint8_t FloatToString(char buffer[10], uint32_t float_value)
-{
-	memset(buffer,'\0',sizeof(buffer));
-	float temp = (float)ConvertNumberToFloat(float_value, 0);
-	sprintf(buffer,"%.3f",temp);
+static BinaryToFloat(uint32_t binary){
+
 }
-uint8_t Float_Domo(char buffer[10],uint32_t temp)
+uint8_t FloatToString(char buffer[20], uint32_t float_value)
 {
 	taskENTER_CRITICAL();
 	memset(buffer,'\0',sizeof(buffer));
-	FloatToString(buffer, temp);
+	float temp = (float)ConvertNumberToFloat(float_value, 0);
+	sprintf(buffer,"%.3f",temp);
 	taskEXIT_CRITICAL();
 }
 int Cmd_test(int argc, char *argv[])
 {
-	printf("\nCmd_set_test\r\n");
-	printf("------------------\r\n");
-	char buffer[10];
-	uint32_t temp = 1067282596;
-	Float_Domo(buffer, temp);
-	printf("\r\n Floating foint: %s\r\n",buffer);
+//	taskENTER_CRITICAL();
+//	printf("\nCmd_set_test\r\n");
+//	printf("------------------\r\n");
+	char buffer[20];
+	uint32_t float_value = 1095027917;
+//	memset(buffer,'\0',sizeof(buffer));
+//	float temp = (float)ConvertNumberToFloat(float_value, 0);
+//	sprintf(buffer,"%.3f",temp);
+//	printf("\r\n Floating foint: %s\r\n",buffer);
+//	taskEXIT_CRITICAL();
+		printf("\nCmd_set_test\r\n");
+		printf("------------------\r\n");
+		FloatToString(buffer, float_value);
+		printf("\r\n Floating foint: %s\r\n",buffer);
 }
 

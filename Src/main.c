@@ -135,6 +135,10 @@ int main(void)
   /* USER CODE BEGIN 2 */
 	__HAL_UART_ENABLE_IT(&huart6, UART_IT_RXNE);
 	printf("\r\n ********* Access Controller Board **************** \r\n");
+	printf("\nCmd_set_test\r\n");
+	printf("------------------\r\n");
+	float temp = 2.33;
+	printf("\r\n Floating foint: %f\r\n",temp);
 	printf("\r\n TRAN NGOC TRAM ne\r\n");
 	printf("\r\n System  starting \r\n");
 //	__disable_irq();
@@ -253,14 +257,14 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
  void vApplicationStackOverflowHook( TaskHandle_t xTask,
                                       signed char *pcTaskName )
   {
-	  printf("\r\n Stack Overflowwwww ");
+	  printf("\r\n Stack Overflowwwww, source: %s \r\n", pcTaskName);
   }
  void vApplicationMallocFailedHook(void){
-	 printf("\r\n vApplicationMallocFailedHook: Stack Overflowwwww ");
+	 printf("\r\n vApplicationMallocFailedHook: Stack Overflowwwww\r\n ");
  }
  void vApplicationDaemonTaskStartupHook(void)
  {
-	 printf("\r\n vApplicationDaemonTaskStartupHook");
+	 printf("\r\n vApplicationDaemonTaskStartupHook\r\n");
  }
   /* USER CODE END Callback 1 */
 }

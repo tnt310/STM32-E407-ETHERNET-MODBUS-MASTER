@@ -464,6 +464,7 @@ void StartDefaultTask(void const * argument)
 					else if (dynamic == NULL){
 						printf("\r\n-----------------------ALLOCATING MEMORY FAIL------------------------\r\n");
 					}
+					//vPortFree(dynamic);
 //				}
 				uiSysUpdate = TRUE;
 				uiSysState++;
@@ -491,6 +492,7 @@ void StartDefaultTask(void const * argument)
 				if (ret == CMDLINE_BAD_CMD)
 					HAL_UART_Transmit(&huart6, Badcommand, strlen(Badcommand),100);
 			}
+			//vTaskDelay(10);
 			//osDelay(10);
 			break;
 

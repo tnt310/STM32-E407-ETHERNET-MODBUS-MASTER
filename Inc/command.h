@@ -21,6 +21,6 @@ uint8_t LoadSdcard(char *file);
 uint8_t RecordData(char *file, char *buffer);
 uint8_t CheckRecord(char *file);
 void ftoa(char buffer[20], char string[20], uint16_t scale);
-uint8_t Float_Domo(char buffer[10],uint32_t temp);
+uint8_t FloatToString(char buffer[20], uint32_t float_value);
 
 #endif

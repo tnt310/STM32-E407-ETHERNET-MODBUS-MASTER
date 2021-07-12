@@ -120,11 +120,6 @@ typedef struct{
 
 typedef union
 {
-	uint8_t i8data[4];
-	float f_loat;
-}uint32tofloat;
-typedef union
-{
 	uint16_t i16data;
 	uint8_t  i8data[2];
 }uint16toint8;
@@ -168,7 +163,6 @@ typedef struct{
 	int16toint8 IRegData;
 	int32toint8 IRegData32;
 	int64toint8 IRegData64;
-	uint32tofloat Floatdata;
 	uint8_t gotflagvalue;
 	uint8_t gotflagProvision;
 	uint8_t gotflagtelemetry;
@@ -177,6 +171,9 @@ typedef struct{
 	uint8_t sum_dev;
 	uint8_t flag32;
 	uint8_t flag64;
+	uint8_t flagFloat;
+	uint8_t flagActive;
+	uint8_t flagNegative;
 }xQueueMbMqtt_t;
 
 enum {
