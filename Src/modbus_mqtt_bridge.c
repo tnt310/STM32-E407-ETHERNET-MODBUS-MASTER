@@ -314,10 +314,10 @@ data1_t *parse_device(char *Buffer, uint16_t BufferLen)
 			i++;
 			if (strstr(regtype,"UINT16") != NULL || strstr(regtype,"INT16") != NULL){
 				ptr->numreg = 1;
-				printf("\r\n Reg Type : %s with num_reg: %d \r\n",regtype, ptr->numreg);
+				//printf("\r\n Reg Type : %s with num_reg: %d \r\n",regtype, ptr->numreg);
 			}else if (strstr(regtype,"INT32") != NULL || strstr(regtype,"UINT32") != NULL || strstr(regtype,"FLOAT32") != NULL){
 				ptr->numreg = 2;
-				printf("\r\n Reg Type : %s with num_reg: %d \r\n",regtype, ptr->numreg);
+				//printf("\r\n Reg Type : %s with num_reg: %d \r\n",regtype, ptr->numreg);
 			}
 		}
 	}
@@ -510,11 +510,11 @@ void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_top
 					printf("\r\n Publish err: %d\n", err);
 					if (err == -11){
 						strcat(head,"\n");
-						RecordData("record.txt",head);// write data to record.txt
+						//RecordData("record.txt",head);// write data to record.txt
 						//MX_LWIP_Init();
 					}else if (err == -1){
 						strcat(head,"\n");
-						RecordData("record.txt",head);// write data to record.txt
+						//RecordData("record.txt",head);// write data to record.txt
 						// do something for err : out of memory
 					}
 					memset(head,'\0',sizeof(head));

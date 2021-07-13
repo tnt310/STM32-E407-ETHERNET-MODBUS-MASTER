@@ -191,13 +191,10 @@ eMBErrorCode eMBMasterRegHoldingCB(UCHAR ucPort, UCHAR * pucRegBuffer, USHORT us
 			}
 	if (strstr(buffer,"UINT16") != NULL || strstr(buffer,"UINT32") != NULL || strstr(buffer,"UINT64") != NULL){
 		active = 1;
-		//printf("\r\n Type Data : %s \r\n",buffer);
 	}else if (strstr(buffer,"INT16") != NULL || strstr(buffer,"INT32") != NULL || strstr(buffer,"INT64") != NULL){
 		negative = 1;
-		//printf("\r\n Type Data : %s \r\n",buffer);
 	}else if(strstr(buffer,"FLOAT32") != NULL){
 		float_t = 1;
-		//printf("\r\n Type Data : %s \r\n",buffer);
 	}
 	uint8_t reg_temp = usNRegs;
 	printf("\r\n- numreg: %d \r\n ",reg_temp);
@@ -209,26 +206,6 @@ eMBErrorCode eMBMasterRegHoldingCB(UCHAR ucPort, UCHAR * pucRegBuffer, USHORT us
 			while (usNRegs > 0)
 			{
 				if (reg_temp == 1) { // with U16, I16
-					//uint8_t bit = (*(pucRegBuffer) >> 7) & 1;
-//					if (bit == 1){
-//					    xQueueMbMqtt.IRegData.i8data[1] = *(pucRegBuffer);  // byte 1
-//						xQueueMbMqtt.IRegData.i8data[0] = *(pucRegBuffer + 1);// byte 0
-//						pusRegHoldingBuf[iRegIndex] = *pucRegBuffer++ << 8;
-//						pusRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
-//						iRegIndex++;
-//						usNRegs--;
-//						xQueueMbMqtt.gotflagvalue = 1;
-//						printf("\r\n I16 on CB : %d \r\n",xQueueMbMqtt.IRegData.i16data);
-//					}else if (bit == 0){
-//					    xQueueMbMqtt.RegData.i8data[1] = *(pucRegBuffer);  // byte 1
-//						xQueueMbMqtt.RegData.i8data[0] = *(pucRegBuffer + 1);// byte 0
-//						pusRegHoldingBuf[iRegIndex] = *pucRegBuffer++ << 8;
-//						pusRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
-//						iRegIndex++;
-//						usNRegs--;
-//						xQueueMbMqtt.gotflagvalue = 0;
-//						printf("\r\n U16 on CB : %d \r\n",xQueueMbMqtt.RegData.i16data);
-//					}
 					if (active == 1){
 						active = 0;
 						xQueueMbMqtt.RegData.i8data[1] = *(pucRegBuffer);  // byte 1
@@ -304,36 +281,6 @@ eMBErrorCode eMBMasterRegHoldingCB(UCHAR ucPort, UCHAR * pucRegBuffer, USHORT us
 						xQueueMbMqtt.gotflagvalue = 2;
 					}
 					xQueueMbMqtt.flag32 = 1;
-//					xQueueMbMqtt.RegData32.i8data[1] = *(pucRegBuffer);  // byte 1
-//					xQueueMbMqtt.RegData32.i8data[0] = *(pucRegBuffer + 1);// byte 0
-//					pusRegHoldingBuf[iRegIndex] = *pucRegBuffer++ << 8;
-//					pusRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
-//					iRegIndex++;
-//					usNRegs--;
-//					uint8_t bit = (*(pucRegBuffer) >> 7) & 1;
-//					printf("\r\n Dich bit: %d \r\n",bit);
-//					if (bit == 1){
-//						xQueueMbMqtt.IRegData32.i8data[1] = xQueueMbMqtt.RegData32.i8data[1]; // byte 1
-//						xQueueMbMqtt.IRegData32.i8data[0] = xQueueMbMqtt.RegData32.i8data[0];// byte 0
-//						xQueueMbMqtt.IRegData32.i8data[3] = *(pucRegBuffer);  // byte 1
-//						xQueueMbMqtt.IRegData32.i8data[2] = *(pucRegBuffer + 1);// byte 0
-//						pusRegHoldingBuf[iRegIndex] = *pucRegBuffer++ << 8;
-//						pusRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
-//						iRegIndex++;
-//						usNRegs--;
-//						xQueueMbMqtt.gotflagvalue = 1;
-//						printf("\r\n I32 on CB : %d \r\n",xQueueMbMqtt.IRegData32.i32data);
-//					}else if (bit == 0){
-//						xQueueMbMqtt.RegData32.i8data[3] = *(pucRegBuffer);  // byte 1
-//						xQueueMbMqtt.RegData32.i8data[2] = *(pucRegBuffer + 1);// byte 0
-//						pusRegHoldingBuf[iRegIndex] = *pucRegBuffer++ << 8;
-//						pusRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
-//						iRegIndex++;
-//						usNRegs--;
-//						xQueueMbMqtt.gotflagvalue = 0;
-//						printf("\r\n U32 on CB : %d \r\n",xQueueMbMqtt.RegData32.i32data);
-//					}
-					//xQueueMbMqtt.flag32 = 1;
 				}else if (reg_temp == 4){ // with U64, I64
 					if (active == 1){
 						active = 0;
@@ -393,49 +340,6 @@ eMBErrorCode eMBMasterRegHoldingCB(UCHAR ucPort, UCHAR * pucRegBuffer, USHORT us
 						xQueueMbMqtt.gotflagvalue = 1;
 					}
 					xQueueMbMqtt.flag64 = 1;
-//					xQueueMbMqtt.RegData64.i8data[1] = *(pucRegBuffer);  // byte 1
-//					xQueueMbMqtt.RegData64.i8data[0] = *(pucRegBuffer + 1);// byte 0
-//					pusRegHoldingBuf[iRegIndex] = *pucRegBuffer++ << 8;
-//					pusRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
-//					iRegIndex++;
-//					usNRegs--;
-//					xQueueMbMqtt.RegData64.i8data[3] = *(pucRegBuffer);  // byte 1
-//					xQueueMbMqtt.RegData64.i8data[2] = *(pucRegBuffer + 1);// byte 0
-//					pusRegHoldingBuf[iRegIndex] = *pucRegBuffer++ << 8;
-//					pusRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
-//					iRegIndex++;
-//					usNRegs--;
-//					xQueueMbMqtt.RegData64.i8data[5] = *(pucRegBuffer);  // byte 1
-//					xQueueMbMqtt.RegData64.i8data[4] = *(pucRegBuffer + 1);// byte 0
-//					pusRegHoldingBuf[iRegIndex] = *pucRegBuffer++ << 8;
-//					pusRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
-//					iRegIndex++;
-//					usNRegs--;
-//					uint8_t bit = (*(pucRegBuffer) >> 7) & 1;
-//					if (bit == 1){
-//						xQueueMbMqtt.IRegData64.i8data[1] = xQueueMbMqtt.RegData64.i8data[1]; // byte 1
-//						xQueueMbMqtt.IRegData64.i8data[0] = xQueueMbMqtt.RegData64.i8data[0];// byte 0
-//						xQueueMbMqtt.IRegData64.i8data[3] = xQueueMbMqtt.RegData64.i8data[3]; // byte 1
-//						xQueueMbMqtt.IRegData64.i8data[2] = xQueueMbMqtt.RegData64.i8data[2];// byte 0
-//						xQueueMbMqtt.IRegData64.i8data[5] = xQueueMbMqtt.RegData64.i8data[5]; // byte 1
-//						xQueueMbMqtt.IRegData64.i8data[4] = xQueueMbMqtt.RegData64.i8data[4];// byte 0
-//						xQueueMbMqtt.IRegData64.i8data[7] = *(pucRegBuffer);  // byte 1
-//						xQueueMbMqtt.IRegData64.i8data[6] = *(pucRegBuffer + 1);// byte 0
-//						pusRegHoldingBuf[iRegIndex] = *pucRegBuffer++ << 8;
-//						pusRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
-//						iRegIndex++;
-//						usNRegs--;
-//						printf("\r\n I64 on CB : %d \r\n",xQueueMbMqtt.IRegData64.i64data);
-//					}else if (bit == 0){
-//						xQueueMbMqtt.RegData64.i8data[7] = *(pucRegBuffer);  // byte 1
-//						xQueueMbMqtt.RegData64.i8data[6] = *(pucRegBuffer + 1);// byte 0
-//						pusRegHoldingBuf[iRegIndex] = *pucRegBuffer++ << 8;
-//						pusRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
-//						iRegIndex++;
-//						usNRegs--;
-//						printf("\r\n U64 on CB : %d \r\n",xQueueMbMqtt.RegData64.i64data);
-//					}
-//					xQueueMbMqtt.flag64 = 1;
 				}
 			}
 			if (read_mutex == 1 || read_mutex == 2){
@@ -485,62 +389,8 @@ eMBErrorCode eMBMasterRegHoldingCB(UCHAR ucPort, UCHAR * pucRegBuffer, USHORT us
 	}
 	return eStatus;
 }
-eMBErrorCode eMBMasterRegCoilsCB( UCHAR ucPort,  UCHAR * pucRegBuffer, USHORT usAddress,USHORT usNCoils, eMBRegisterMode eMode ){
-
-				eMBErrorCode eStatus = MB_ENOERR;
-				USHORT iRegIndex;
-				USHORT *pusRegHoldingBuf;
-				USHORT  usCoilStart = M_REG_COIL_START;
-				 UCHAR  usCoilBuf[(M_REG_COIL_NREGS/8)+1];
-				USHORT REG_COIL_START = M_REG_COIL_START;
-				USHORT REG_COIL_NREGS = M_REG_COIL_NREGS;
-			/* FreeRTOS variable*/
-				xQueueMbMqtt_t xQueueMbMqtt;
-				xQueueMbMqtt.PortID = ucPort;
-				xQueueMbMqtt.NodeID = ucMBMasterGetDestAddress(ucPort);
-				/* if mode is read, the master will write the received date to buffer. */
-				usAddress--;
-				xQueueMbMqtt.RegAdr.i8data[0] = (uint8_t)usAddress;
-				xQueueMbMqtt.RegAdr.i8data[1] = (uint8_t)(usAddress >> 8);
-				printf("\r\n- Ncoils: %d \r\n ",usNCoils);
-				if ((usAddress >= REG_COIL_START)&& ((uint8_t)usAddress + usNCoils <= REG_COIL_START + REG_COIL_NREGS)) {
-					iRegIndex = usAddress - REG_COIL_START;
-					switch (eMode) {
-					case MB_REG_READ:
-						xQueueMbMqtt.FunC = MB_FUNC_READ_COILS;
-						while (usNCoils> 0)
-						{
-						    xQueueMbMqtt.RegData.i8data[1] = 0;
-							xQueueMbMqtt.RegData.i8data[0] = *(pucRegBuffer);
-							printf("\r\n - data read coil 1: %d\t%d\t%d\r\n ",xQueueMbMqtt.NodeID,xQueueMbMqtt.FunC, *(pucRegBuffer));
-							printf("\r\n - data read coil 0: %d\t%d\t%d\r\n ",xQueueMbMqtt.NodeID,xQueueMbMqtt.FunC, *(pucRegBuffer+1));
-							pusRegHoldingBuf[iRegIndex] = *pucRegBuffer++ << 8;
-							pusRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
-							iRegIndex++;
-							usNCoils--;
-							printf("\r\n- data read coil: %d \r\n ",xQueueMbMqtt.RegData.i16data);
-						}
-						break;
-					case MB_REG_WRITE:
-						xQueueMbMqtt.FunC = MB_FUNC_WRITE_SINGLE_COIL;
-				          while( usNCoils > 0 )
-				           {
-				                UCHAR ucResult = xMBUtilGetBits( pucRegBuffer, iRegIndex - ( usAddress - M_REG_COIL_START ), 1 );
-				                xMBUtilSetBits( usCoilBuf, iRegIndex, 1, ucResult );
-				               usCoilBuf[iRegIndex] = *pucRegBuffer++ << 8;
-				               usCoilBuf[iRegIndex] |= *pucRegBuffer++;
-				               iRegIndex++;
-				               usNCoils--;
-				           }
-						break;
-					}
-				} else {
-					eStatus = MB_ENOREG;
-				}
-				return eStatus;
-}
 /************************Master Callback Function for Input Register****************/
-eMBErrorCode eMBMasterRegInputCB(UCHAR ucPort, UCHAR * pucRegBuffer, USHORT usAddress,USHORT usNRegs,eMBRegisterMode eMode)
+eMBErrorCode eMBMasterRegInputCB(UCHAR ucPort, UCHAR * pucRegBuffer, USHORT usAddress,USHORT usNRegs)
 {
 	USHORT usMRegHoldStart = M_REG_INPUT_START;
 	USHORT usMRegHoldBuf[MB_RS485_MAX_PORT][MB_MASTER_TOTAL_SLAVE_NUM][M_REG_INPUT_NREGS];
@@ -564,10 +414,8 @@ eMBErrorCode eMBMasterRegInputCB(UCHAR ucPort, UCHAR * pucRegBuffer, USHORT usAd
 		if ((usAddress >= REG_INPUT_START) && ((uint8_t)usAddress + usNRegs <= REG_INPUT_START + REG_INPUT_NREGS))
 		  {
 			iRegIndex =  usAddress - REG_INPUT_NREGS;
-			switch (eMode){
-			case MB_REG_READ:
-				xQueueMbMqtt.FunC = MB_FUNC_READ_INPUT_REGISTER;
-				while (usNRegs > 0)
+			xQueueMbMqtt.FunC = MB_FUNC_READ_INPUT_REGISTER;
+			while (usNRegs > 0)
 					{
 				    	xQueueMbMqtt.RegData.i8data[1] = *(pucRegBuffer);  // byte 1
 				    	xQueueMbMqtt.RegData.i8data[0] = *(pucRegBuffer + 1);// byte 0
@@ -575,11 +423,8 @@ eMBErrorCode eMBMasterRegInputCB(UCHAR ucPort, UCHAR * pucRegBuffer, USHORT usAd
 				    	pusRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
 				    	iRegIndex++;
 				    	usNRegs--;
+				    	printf("\r\n IMPUT CB: %d \r\n",xQueueMbMqtt.RegData.i16data);
 					}
-				break;
-			}
-
-			//printf("\r\n - data read input: %d\t%d\t%d\r\n ",xQueueMbMqtt.NodeID,xQueueMbMqtt.FunC, xQueueMbMqtt.RegData.i16data);
 			for (uint8_t i = 0; i < num_device; i++){
 				if ((dynamic+i)->deviceID == xQueueMbMqtt.NodeID && (dynamic+i)->deviceChannel == xQueueMbMqtt.RegAdr.i16data && (dynamic+i)->func == xQueueMbMqtt.FunC ){
 					xQueueMbMqtt.scale = (dynamic+i)->scale;
@@ -681,3 +526,6 @@ eMBErrorCode eMBMasterRegInputCB(UCHAR ucPort, UCHAR * pucRegBuffer, USHORT usAd
 //	}
 //	return eStatus;
 //}
+eMBErrorCode eMBMasterRegCoilsCB( UCHAR ucPort,  UCHAR * pucRegBuffer, USHORT usAddress,USHORT usNCoils, eMBRegisterMode eMode )
+{
+	}
