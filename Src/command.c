@@ -92,13 +92,16 @@ tCmdLineEntry g_psCmdTable[] = {
 		{ "checkrecord",Cmd_check_record," : Send provision request" },
 		{ "deleteline",Cmd_delete_line," : Send provision request" },
 		{ "setfactory",Cmd_set_factory," : Send provision request" },
-		{ "configtimeout",Cmd_set_timeout," : Send provision request" },
-		{ "configport0",Cmd_set_port0," : Send provision request" },
-		{ "configport1",Cmd_set_port1," : Send provision request" },
-		{ "configtelemetry",Cmd_set_telemetry," : Send provision request" },
-		{ "confignetwork",Cmd_set_network," : Send provision request" },
-		{ "configapikey",Cmd_set_apikey," : Send provision request" },
-		{ "configmqtt",Cmd_set_mqttInfo," : Send provision request" },
+
+		{ "network",Cmd_set_network," : Send provision request" },
+		{ "mqtt",Cmd_set_mqttInfo," : Send provision request" },
+		{ "port0",Cmd_set_port0," : Send provision request" },
+		{ "port1",Cmd_set_port1," : Send provision request" },
+		{ "apikey",Cmd_set_apikey," : Send provision request" },
+		{ "timeout",Cmd_set_timeout," : Send provision request" },
+		{ "sendprovision", Cmd_send_provision," : Send provision request" },
+		{ "telemetry",Cmd_set_telemetry," : Send provision request" },
+
 		{ "gettime",Cmd_get_time," : Send provision request" },
 		{ "setmqttport", Cmd_mqtt_port," : Set static ip for brigde" },
 		{ "setip", Cmd_set_localip," : Set static ip for brigde" },
@@ -106,7 +109,7 @@ tCmdLineEntry g_psCmdTable[] = {
 		{ "save", Cmd_save," : Save all configuration to flash and reboot" },
 		{ "setgateway", Cmd_set_localgw," : Set default gateway for board" },
 		{ "setnetmask", Cmd_set_netmask," : Set netmask for board" },
-		{ "sendprovision", Cmd_send_provision," : Send provision request" },
+
 		{ "loadtable", Cmd_allocate_device," : Update network" },
 		{ "setmutex", Cmd_set_mutex," : Update network" },
 		{ "offmutex", Cmd_off_mutex," : Send provision request" },
@@ -463,13 +466,13 @@ int Cmd_allocate_device(int argc, char *argv[])
 			   (dynamic+i)->numreg,(dynamic+i)->scale,(dynamic+i)->deviceChannel,(dynamic+i)->deviceType,(dynamic+i)->deviceName,
 			   (dynamic+i)->channeltitle,(dynamic+i)->valueType,(dynamic+i)->regtype);
 	}
-	printf("\r\nADDRESS OFF NEW DEVICE--------------------------------------------------------\r\n");
-	for (uint8_t i = 0; i < num_device; i++)
-	{
-		   printf("\r\nDevice %d: %d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d",i,&(dynamic+i)->channel,&(dynamic+i)->deviceID,&(dynamic+i)->func,&(dynamic+i)->devicestatus,
-				   &(dynamic+i)->numreg,&(dynamic+i)->scale,&(dynamic+i)->deviceChannel,&(dynamic+i)->deviceType,&(dynamic+i)->deviceName,
-				   &(dynamic+i)->channeltitle,&(dynamic+i)->valueType,&(dynamic+i)->regtype);
-	}
+//	printf("\r\nADDRESS OFF NEW DEVICE--------------------------------------------------------\r\n");
+//	for (uint8_t i = 0; i < num_device; i++)
+//	{
+//		   printf("\r\nDevice %d: %d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d",i,&(dynamic+i)->channel,&(dynamic+i)->deviceID,&(dynamic+i)->func,&(dynamic+i)->devicestatus,
+//				   &(dynamic+i)->numreg,&(dynamic+i)->scale,&(dynamic+i)->deviceChannel,&(dynamic+i)->deviceType,&(dynamic+i)->deviceName,
+//				   &(dynamic+i)->channeltitle,&(dynamic+i)->valueType,&(dynamic+i)->regtype);
+//	}
 	printf("\r\n");
 }
 /*---------------------SET MUTEX FOR MBTASK--------------------------------------------------------------------------*/
@@ -629,6 +632,8 @@ int Cmd_set_telemetry(int argc, char *argv[])
 	SD_telemetry(buffer, telemetry);
 	printf("\r\n telemetry is set: %s\r\n",buffer);
 	overwrite_file("config.txt",buffer, 6);
+	uint32_t handle = 1;
+	xQueueSend(xQueueResetHandle,&handle,portMAX_DELAY);
 }
 int Cmd_set_port0(int argc, char *argv[]) // timeout: 15s, 30s, 1p, 3p, 5p, 10p
 {
@@ -681,7 +686,6 @@ int Cmd_save(int argc, char *argv[]) {
 
 	uint32_t handle = 1;
 	xQueueSend(xQueueResetHandle,&handle,portMAX_DELAY);
-
 }
 /*---------------------------LOAD DATA FROM SDCARD------------------------------------------------------------*/
 uint8_t LoadSdcard(char *file)
@@ -821,7 +825,7 @@ void ftoa(char buffer[20], char string[20], uint16_t scale)
 	}
 }
 
-static float ConvertNumberToFloat(unsigned long number, int isDoublePrecision)
+float ConvertNumberToFloat(unsigned long number, int isDoublePrecision)
 {
     int mantissaShift = isDoublePrecision ? 52 : 23;
     unsigned long exponentMask = isDoublePrecision ? 0x7FF0000000000000 : 0x7f800000;
@@ -844,27 +848,33 @@ static BinaryToFloat(uint32_t binary){
 }
 uint8_t FloatToString(char buffer[20], uint32_t float_value)
 {
-	taskENTER_CRITICAL();
-	memset(buffer,'\0',sizeof(buffer));
-	float temp = (float)ConvertNumberToFloat(float_value, 0);
-	sprintf(buffer,"%.3f",temp);
-	taskEXIT_CRITICAL();
+	char string[20];
+	memset(string,'\0',sizeof(string));
+	float temp = ConvertNumberToFloat(float_value, 0);
+	int data = (int)(temp*1000);
+	sprintf(string,"%d",data);
+	ftoa(buffer, string, 1000);
 }
 int Cmd_test(int argc, char *argv[])
 {
-//	taskENTER_CRITICAL();
-//	printf("\nCmd_set_test\r\n");
-//	printf("------------------\r\n");
+	//taskENTER_CRITICAL();
+	printf("\nCmd_set_test\r\n");
+	printf("------------------\r\n");
 	char buffer[20];
+	char string[20];
 	uint32_t float_value = 1095027917;
-//	memset(buffer,'\0',sizeof(buffer));
-//	float temp = (float)ConvertNumberToFloat(float_value, 0);
-//	sprintf(buffer,"%.3f",temp);
-//	printf("\r\n Floating foint: %s\r\n",buffer);
-//	taskEXIT_CRITICAL();
-		printf("\nCmd_set_test\r\n");
-		printf("------------------\r\n");
-		FloatToString(buffer, float_value);
-		printf("\r\n Floating foint: %s\r\n",buffer);
+	memset(buffer,'\0',sizeof(buffer));
+	memset(string,'\0',sizeof(string));
+	float temp = ConvertNumberToFloat(float_value, 0);
+	int data = (int)(temp*1000);
+	sprintf(string,"%d",data);
+	ftoa(buffer, string, 1000);
+	//sprintf(buffer,"%.3f",temp);
+	printf("\r\n Floating foint: %s\r\n",buffer);
+	//taskEXIT_CRITICAL();
+//		printf("\nCmd_set_test\r\n");
+//		printf("------------------\r\n");
+//		FloatToString(buffer, float_value);
+//		printf("\r\n Floating foint: %s\r\n",buffer);
 }
 

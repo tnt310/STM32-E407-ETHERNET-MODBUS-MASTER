@@ -378,7 +378,7 @@ void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_top
 	while (1) {
 		Err = xQueueReceive(xQueueUplinkHandle, &xQueueMbMqtt,portDEFAULT_WAIT_TIME*3);
 		if (Err == pdPASS) {
-			if (xQueueMbMqtt.gotflagProvision == 1 && xQueueMbMqtt.sum_dev != 0)  // check provision ?
+			if (xQueueMbMqtt.gotflagProvision == 1)  // check provision ?
 				{
 					err_t err;
 					uint8_t SUM = xQueueMbMqtt.sum_dev;
@@ -402,6 +402,7 @@ void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_top
 				                            if ((dynamic+z)->deviceID == (dynamic+j)->deviceID){
 				                            	tail_provision(tail,(dynamic+z)->deviceChannel,(dynamic+z)->channeltitle,(dynamic+z)->valueType, (dynamic+z)->func);
 				                                strcat(head,tail);
+				                                printf("\r\n lentf of head: %d", strlen(head));
 				                            }
 				                        }
 				                        head[strlen(head) - 1] = '\0';
@@ -411,7 +412,7 @@ void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_top
 										if (err != ERR_OK) {
 											printf("\r\n Publish Provision err: %d\n", err);
 											}
-										osDelay(200);
+										//osDelay(200);
 				                    }
 				            }
 				        }

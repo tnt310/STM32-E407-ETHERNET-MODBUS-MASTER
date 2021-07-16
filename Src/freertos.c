@@ -128,6 +128,7 @@ void vApplicationDaemonTaskStartupHook(void);
 /* USER CODE BEGIN 4 */
 __weak void vApplicationStackOverflowHook(xTaskHandle xTask,
 		signed char *pcTaskName) {
+	printf("\r\n Task overflow: %s\r\n",pcTaskName);
 	/* Run time stack overflow checking is performed if
 	 configCHECK_FOR_STACK_OVERFLOW is defined to 1 or 2. This hook function is
 	 called if a stack overflow is detected. */
@@ -234,7 +235,7 @@ void MX_FREERTOS_Init(void) {
 
   /* Create the thread(s) */
   /* definition and creation of defaultTask */
-  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 2048);
+  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 1500);
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
@@ -264,7 +265,7 @@ void StartDefaultTask(void const * argument)
 	printf("\r\n MemFree: %d", xPortGetFreeHeapSize());
 
 	/*Modbus app*/
-	osThreadDef(mbAppTask, ModbusTestTask, osPriorityNormal, 0, 2 * 128);
+	osThreadDef(mbAppTask, ModbusTestTask, osPriorityNormal, 0, 4 * 128);
 	mbAppTask = osThreadCreate(osThread(mbAppTask), NULL);
 	printf("\r\n MemFree: %d", xPortGetFreeHeapSize());
 
@@ -284,7 +285,7 @@ void StartDefaultTask(void const * argument)
 	printf("\r\n MemFree: %d", xPortGetFreeHeapSize());
 
 	/*MQTT serive*/
-	osThreadDef(netMQTTTask, netmqttTask, osPriorityNormal, 0, 14 * 256);
+	osThreadDef(netMQTTTask, netmqttTask, osPriorityNormal, 0, 10 * 256);
 	netMQTTTask = osThreadCreate(osThread(netMQTTTask), NULL);
 	printf("\r\n MemFree: %d", xPortGetFreeHeapSize());
 
@@ -299,7 +300,6 @@ void StartDefaultTask(void const * argument)
 	resetHandlerTask = osThreadCreate(osThread(resetHandlerTask), NULL);
 
 	printf("\r\n\r\n MemFree: %d", xPortGetFreeHeapSize());
-	printf("\r\n MemFree: %d", xPortGetFreeHeapSize());
 
 	/*Controller*/
 	xQueueControl_t xQueueControl;

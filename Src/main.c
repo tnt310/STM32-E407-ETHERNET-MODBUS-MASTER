@@ -135,10 +135,6 @@ int main(void)
   /* USER CODE BEGIN 2 */
 	__HAL_UART_ENABLE_IT(&huart6, UART_IT_RXNE);
 	printf("\r\n ********* Access Controller Board **************** \r\n");
-	printf("\nCmd_set_test\r\n");
-	printf("------------------\r\n");
-	float temp = 2.33;
-	printf("\r\n Floating foint: %f\r\n",temp);
 	printf("\r\n TRAN NGOC TRAM ne\r\n");
 	printf("\r\n System  starting \r\n");
 //	__disable_irq();
