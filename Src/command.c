@@ -38,6 +38,7 @@ DIR dirOject;
 FILINFO fileInfo;
 char SDbuffer[200];
 uint8_t record[200];
+size_t packet, error;
 
 uint32_t mqtt_port;
 uint32_t modbus_mutex;
@@ -99,7 +100,7 @@ tCmdLineEntry g_psCmdTable[] = {
 		{ "port1",Cmd_set_port1," : Send provision request" },
 		{ "apikey",Cmd_set_apikey," : Send provision request" },
 		{ "timeout",Cmd_set_timeout," : Send provision request" },
-		{ "sendprovision", Cmd_send_provision," : Send provision request" },
+		{ "sendprovision", Cmd_send_provision," : Send provision request"},
 		{ "telemetry",Cmd_set_telemetry," : Send provision request" },
 
 		{ "gettime",Cmd_get_time," : Send provision request" },
@@ -254,7 +255,7 @@ int Cmd_delete_channel(int argc, char *argv[])
 
 	}
 /*---------------------------SET PARAMETER INTO SDCARD-----------------------------------------------------------------------*/
-static uint8_t write_sdcard(char *file,char *buffer)
+uint8_t write_sdcard(char *file,char *buffer)
 {
 	uint8_t status = 0;
 	MX_FATFS_Init();
@@ -843,9 +844,7 @@ float ConvertNumberToFloat(unsigned long number, int isDoublePrecision)
     float value = (sign ? -1 : 1) * pow(2.0, exponent) * (total + 1.0);
     return value;
 }
-static BinaryToFloat(uint32_t binary){
 
-}
 uint8_t FloatToString(char buffer[20], uint32_t float_value)
 {
 	char string[20];
@@ -857,24 +856,10 @@ uint8_t FloatToString(char buffer[20], uint32_t float_value)
 }
 int Cmd_test(int argc, char *argv[])
 {
-	//taskENTER_CRITICAL();
 	printf("\nCmd_set_test\r\n");
 	printf("------------------\r\n");
-	char buffer[20];
-	char string[20];
-	uint32_t float_value = 1095027917;
-	memset(buffer,'\0',sizeof(buffer));
-	memset(string,'\0',sizeof(string));
-	float temp = ConvertNumberToFloat(float_value, 0);
-	int data = (int)(temp*1000);
-	sprintf(string,"%d",data);
-	ftoa(buffer, string, 1000);
-	//sprintf(buffer,"%.3f",temp);
-	printf("\r\n Floating foint: %s\r\n",buffer);
-	//taskEXIT_CRITICAL();
-//		printf("\nCmd_set_test\r\n");
-//		printf("------------------\r\n");
-//		FloatToString(buffer, float_value);
-//		printf("\r\n Floating foint: %s\r\n",buffer);
+	printf("\r\n Done-packet: %d \r\n", packet);
+	printf("\r\n Fail-packet: %d \r\n", error);
+
 }
 

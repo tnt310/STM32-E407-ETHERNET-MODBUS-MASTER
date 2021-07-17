@@ -35,11 +35,11 @@ uint8_t SD_Serial(char buffer[100],uint8_t type_serial,uint8_t baud,uint8_t data
 {
     memset(buffer,'\0',sizeof(buffer));
     if (type_serial==1){ //rs232
-    	 sprintf(buffer,"{\"rs232\":{\"baud\":%d,\"databits\":%d,\"stopbits\":%d,\"parity\":%d}}\n",1200*baud,databits,stopbit,parirty);
+    	 sprintf(buffer,"{\"rs232\":{\"baud\":%d,\"databits\":%d,\"stopbits\":%d,\"parity\":%d}}\n",baud,databits,stopbit,parirty);
     }else if(type_serial==2){ //port 0
-    	sprintf(buffer,"{\"port0\":{\"baud\":%d,\"databits\":%d,\"stopbits\":%d,\"parity\":%d}}\n",1200*baud,databits,stopbit,parirty);
+    	sprintf(buffer,"{\"port0\":{\"baud\":%d,\"databits\":%d,\"stopbits\":%d,\"parity\":%d}}\n",baud,databits,stopbit,parirty);
     }else if(type_serial==3){ //port 1
-    	sprintf(buffer,"{\"port1\":{\"baud\":%d,\"databits\":%d,\"stopbits\":%d,\"parity\":%d}}\n",1200*baud,databits,stopbit,parirty);
+    	sprintf(buffer,"{\"port1\":{\"baud\":%d,\"databits\":%d,\"stopbits\":%d,\"parity\":%d}}\n",baud,databits,stopbit,parirty);
     }
 }
 uint8_t SD_timeout(char buffer[50],uint16_t timeout)
@@ -57,3 +57,20 @@ uint8_t SD_telemetry(char buffer[20], uint8_t telemetry)
     sprintf(buffer,"{\"telemetry\":%d}\n",telemetry);
 }
 
+uint8_t SD_ErrorPacket(char buffer[50],uint8_t port, uint8_t deviceID, uint16_t channel)
+{
+	memset(buffer,'\0',sizeof(buffer));
+	uint8_t time[6];
+	char minute[3];
+	char second[3];
+	getTime(time);
+	if (time[4] < 10){
+		 sprintf(minute,"0%d",time[4]);
+	}else
+		 sprintf(minute,"%d",time[4]);
+	if (time[5] < 10){
+		 sprintf(second,"0%d",time[5]);
+	}else
+		 sprintf(second,"%d",time[5]);
+    sprintf(buffer,"{\"id\":%d,\"channel\":%d,\"time\":\"20%d-0%d-0%dT%d:%s:%s.000Z\"}\n", deviceID, channel,time[0],time[1],time[2],time[3],minute,second);
+}

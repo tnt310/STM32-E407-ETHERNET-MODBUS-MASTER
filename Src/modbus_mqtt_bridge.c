@@ -534,13 +534,13 @@ void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_top
 					    memset(ftoastr,'\0',sizeof(ftoastr));
 						sprintf(res,"%d",xQueueMbMqtt.RegData32.i32data);
 						ftoa(ftoastr, res, xQueueMbMqtt.scale);
-						printf("\r\nTelemetry data reg32: %d \t %d \t %s\r\n",xQueueMbMqtt.NodeID,xQueueMbMqtt.RegAdr.i16data ,ftoastr);
+						printf("\r\nTelemetry data regU32: %d \t %d \t %s\r\n",xQueueMbMqtt.NodeID,xQueueMbMqtt.RegAdr.i16data ,ftoastr);
 					}else if(xQueueMbMqtt.gotflagvalue == 1){
 					    memset(res,'\0',sizeof(res));
 					    memset(ftoastr,'\0',sizeof(ftoastr));
 						sprintf(res,"%d",xQueueMbMqtt.IRegData32.i32data);
 						ftoa(ftoastr, res, xQueueMbMqtt.scale);
-						printf("\r\nTelemetry data reg32: %d \t %d \t %s\r\n",xQueueMbMqtt.NodeID,xQueueMbMqtt.RegAdr.i16data ,ftoastr);
+						printf("\r\nTelemetry data regI32: %d \t %d \t %s\r\n",xQueueMbMqtt.NodeID,xQueueMbMqtt.RegAdr.i16data ,ftoastr);
 					}else if(xQueueMbMqtt.gotflagvalue == 2){
 					    memset(res,'\0',sizeof(res));
 					    memset(ftoastr,'\0',sizeof(ftoastr));

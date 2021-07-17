@@ -18,4 +18,6 @@ uint8_t SD_Serial(char buffer[200],uint8_t type_serial,uint8_t baud,uint8_t data
 uint8_t SD_timeout(char buffer[50],uint16_t timeout);
 uint8_t SD_telemetry(char buffer[20], uint8_t telemetry);
 uint8_t SD_apikey(char buffer[50],char *apikey);
+uint8_t SD_ErrorPacket(char buffer[50],uint8_t port, uint8_t deviceID, uint16_t channel);
+uint8_t write_sdcard(char *file,char *buffer);
 #endif /* SDCARD_H_ */

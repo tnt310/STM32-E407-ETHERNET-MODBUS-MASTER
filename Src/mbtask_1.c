@@ -15,6 +15,7 @@
 #include "param.h"
 #include "flash.h"
 #include "command.h"
+#include "sdcard.h"
 
 /* Shared Variable ----------------------------------*/
 osThreadId mbProtocolTask;
@@ -36,7 +37,9 @@ extern uint32_t timeDelay;
 volatile uint8_t read_mutex;
 volatile uint8_t write_mutex;
 char buffer[20];
+char err_buffer[50];
 uint8_t active, negative, float_t;
+extern size_t packet, error;
 /* Private variables ---------------------------------------------------------*/
 
 #define M_REG_HOLDING_START            0
@@ -131,7 +134,13 @@ void ModbusTestTask(void const *argument) {
 				                            		switch(device.func)
 				                            		{
 				                            			case MB_FUNC_READ_HOLDING_REGISTER:
-				                            				eMBMasterReqReadHoldingRegister(device.channel, device.id, device.regAdr,device.numreg, MB_DEFAULT_TEST_TIMEOUT);
+				                            				if (eMBMasterReqReadHoldingRegister(device.channel, device.id, device.regAdr,device.numreg, MB_DEFAULT_TEST_TIMEOUT) ==MB_MRE_NO_ERR){
+				                            					packet ++;
+				                            				}else{
+				                            					SD_ErrorPacket(err_buffer, device.channel, device.id, device.regAdr);
+				                            					write_sdcard("event.txt",err_buffer);
+				                            					error ++;
+				                            				}
 				                            				break;
 				                            			case MB_FUNC_READ_COILS:
 				                            				eMBMasterReqReadCoils(device.channel, device.id, device.regAdr,device.numreg, MB_DEFAULT_TEST_TIMEOUT);
@@ -142,7 +151,7 @@ void ModbusTestTask(void const *argument) {
 				                            		}
 				                            		break;
 				                            	}
-				                            	HAL_Delay(300);
+				                            	HAL_Delay(200);
 				                            }
 				                        }
 				                    }
