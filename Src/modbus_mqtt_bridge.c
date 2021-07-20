@@ -511,11 +511,11 @@ void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_top
 					printf("\r\n Publish err: %d\n", err);
 					if (err == -11){
 						strcat(head,"\n");
-						//RecordData("record.txt",head);// write data to record.txt
+						RecordData("record.txt",head);// write data to record.txt
 						//MX_LWIP_Init();
 					}else if (err == -1){
 						strcat(head,"\n");
-						//RecordData("record.txt",head);// write data to record.txt
+						RecordData("record.txt",head);// write data to record.txt
 						// do something for err : out of memory
 					}
 					memset(head,'\0',sizeof(head));

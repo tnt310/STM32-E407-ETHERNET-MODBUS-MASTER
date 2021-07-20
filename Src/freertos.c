@@ -431,6 +431,22 @@ void StartDefaultTask(void const * argument)
 				uiSysState++;
 			}
 			break;
+		case SYS_RECORD:
+			printf("\r\n SYS_RECORD: Starting...  \r\n");
+			xQueueMbMqtt_t xQueueMbMqtt;
+			BaseType_t Err = pdFALSE;
+			if (CheckRecord("record.txt") == 1){
+				xQueueMbMqtt.gotflagLast = 1;
+				//HAL_Delay(2000);
+				Err = xQueueSend(xQueueUplinkHandle, &xQueueMbMqtt,portDEFAULT_DELAY);
+				if (Err == pdPASS){
+					xQueueMbMqtt.gotflagLast = 0;
+					//printf("\r\n-----------------ALL DATA IN RECORD: SENT--------------------\r\n");
+				}
+			}
+			uiSysUpdate = TRUE;
+			uiSysState++;
+			break;
 		case SYS_DEVICE:
 			printf("\r\n SYS_DEVICE: Implementing...  \r\n");
 			MX_FATFS_Init();
@@ -468,22 +484,6 @@ void StartDefaultTask(void const * argument)
 //				}
 				uiSysUpdate = TRUE;
 				uiSysState++;
-			break;
-		case SYS_RECORD:
-			printf("\r\n SYS_RECORD: Starting...  \r\n");
-			xQueueMbMqtt_t xQueueMbMqtt;
-			BaseType_t Err = pdFALSE;
-			if (CheckRecord("record.txt") == 1){
-				xQueueMbMqtt.gotflagLast = 1;
-				//HAL_Delay(2000);
-				Err = xQueueSend(xQueueUplinkHandle, &xQueueMbMqtt,portDEFAULT_DELAY);
-				if (Err == pdPASS){
-					xQueueMbMqtt.gotflagLast = 0;
-					//printf("\r\n-----------------ALL DATA IN RECORD: SENT--------------------\r\n");
-				}
-			}
-			uiSysUpdate = TRUE;
-			uiSysState++;
 			break;
 		case SYS_DEFAULT:
 			if (gotCommandFlag == 1) {

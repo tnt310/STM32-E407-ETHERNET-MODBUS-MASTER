@@ -38,7 +38,7 @@ volatile uint8_t read_mutex;
 volatile uint8_t write_mutex;
 char buffer[20];
 char err_buffer[50];
-uint8_t active, negative, float_t;
+uint8_t active, negative, float_t, flag = 0;
 extern size_t packet, error;
 /* Private variables ---------------------------------------------------------*/
 
@@ -107,6 +107,7 @@ void ModbusTestTask(void const *argument) {
 	uint8_t count = 0;
 	while (1) {
 		while(modbus_telemetry){
+			HAL_Delay(500);
 					for (uint8_t i = 0;i < num_device ; i++){
 						for (uint8_t j = 0; j < num_device ; j++){
 							if ((dynamic + j)->deviceID == (dynamic +i)->deviceID && (dynamic +i)->deviceID != (dynamic +i-1)->deviceID){
@@ -128,6 +129,7 @@ void ModbusTestTask(void const *argument) {
 				                            	device.func = (dynamic +z)->func;
 				                            	device.regAdr = (dynamic +z)->deviceChannel;
 				                            	device.numreg =(dynamic +z)->numreg;
+				                            	flag = 1;
 				                            	switch(device.channel)
 				                            	{
 				                            		case 0:
@@ -159,15 +161,16 @@ void ModbusTestTask(void const *argument) {
 						}
 						TEST: count = 0;
 					}
-					HAL_Delay(100);
-					xQueueMbMqtt.gotflagLast = 2;
-					BaseType_t Err = pdFALSE;
-					Err = xQueueSend(xQueueUplinkHandle, &xQueueMbMqtt,portDEFAULT_WAIT_TIME);
-					if (Err == pdPASS){
-						xQueueMbMqtt.gotflagLast = 0;
+					if (flag == 1){
+						HAL_Delay(100);
+						xQueueMbMqtt.gotflagLast = 2;
+						BaseType_t Err = pdFALSE;
+						Err = xQueueSend(xQueueUplinkHandle, &xQueueMbMqtt,portDEFAULT_WAIT_TIME);
+						if (Err == pdPASS){
+							xQueueMbMqtt.gotflagLast = 0;
+						}
+						HAL_Delay((timeDelay * 1000)- (200 * num_device)-100- 10000);
 					}
-					HAL_Delay((timeDelay * 1000)-(300 * num_device)-100-11000);
-
 			}
 	}
 }
@@ -206,7 +209,6 @@ eMBErrorCode eMBMasterRegHoldingCB(UCHAR ucPort, UCHAR * pucRegBuffer, USHORT us
 		float_t = 1;
 	}
 	uint8_t reg_temp = usNRegs;
-	//printf("\r\n- numreg: %d \r\n ",reg_temp);
 	if ((usAddress >= REG_HOLDING_START)&& ((uint8_t)usAddress + usNRegs <= REG_HOLDING_START + REG_HOLDING_NREGS)) {
 		iRegIndex = usAddress - REG_HOLDING_START;
 		switch (eMode) {

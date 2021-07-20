@@ -136,7 +136,7 @@ void UARTIntHandler(void) {
 	uint8_t receivedChar;
 	char *EnterCMD = "\r\n>";
 	receivedChar = (uint8_t) ((huart6).Instance->DR & (uint8_t) 0x00FF);
-	HAL_UART_Transmit(&huart6, &receivedChar, 1, 100);
+	//HAL_UART_Transmit(&huart6, &receivedChar, 1, 100);
 	__HAL_UART_ENABLE_IT(&huart6, UART_IT_RXNE);
 	if (receivedChar != 13) {
 		if ((receivedChar == 8) || (receivedChar == 127)) {
@@ -670,12 +670,11 @@ int Cmd_set_network(int argc, char *argv[]) // timeout: 15s, 30s, 1p, 3p, 5p, 10
 }
 int Cmd_set_mqttInfo(int argc, char *argv[]) // timeout: 15s, 30s, 1p, 3p, 5p, 10p
 {
-	char *broker = *(argv+4);
-	char *id = *(argv+1);
-	char *username = *(argv+2);
-	char *pwd = *(argv+3);
-	uint16_t port = atoi(*(argv+4));
-	char *apikey = *(argv+5);
+	char *broker = *(argv+1);
+	char *id = *(argv+2);
+	char *username = *(argv+3);
+	char *pwd = *(argv+4);
+	uint16_t port = atoi(*(argv+5));
 	char buffer[200];
 	SD_Mqtt(buffer, port,id, username, pwd, broker);
 	printf("\r\n mqttInfo is set: %s\r\n",buffer);

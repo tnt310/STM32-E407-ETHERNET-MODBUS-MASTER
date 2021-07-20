@@ -39,8 +39,23 @@ uint8_t  tail_provision(char *buffer,uint16_t channel_id, char *channel_name, ch
 uint8_t timestamp_telemetry(char *buffer, uint8_t time[6])
 {
     memset(buffer,'\0',sizeof(buffer));
+    char month[3];
+    char day[3];
+    char hour[3];
     char minute[3];
     char second[3];
+    if (time[1] < 10){
+    	sprintf(month,"0%d",time[1]);
+    }else
+    	sprintf(month,"%d",time[1]);
+    if (time[2] < 10){
+    	sprintf(day,"0%d",time[2]);
+    }else
+    	sprintf(day,"%d",time[2]);
+    if (time[3] < 10){
+    	sprintf(hour,"0%d",time[3]);
+    }else
+    	sprintf(hour,"%d",time[3]);
     if (time[4] < 10){
     	 sprintf(minute,"0%d",time[4]);
     }else
@@ -49,7 +64,7 @@ uint8_t timestamp_telemetry(char *buffer, uint8_t time[6])
     	 sprintf(second,"0%d",time[5]);
     }else
     	 sprintf(second,"%d",time[5]);
-    sprintf(buffer,"{\"timestamp\":\"20%d-0%d-0%dT%d:%s:%s.000Z\",\"data\":{",time[0],time[1],time[2],time[3],minute,second);
+    sprintf(buffer,"{\"timestamp\":\"20%d-%s-%sT%s:%s:%s.000Z\",\"data\":{",time[0],month,day,hour,minute,second);
 }
 //uint8_t head_telemetry(char *buffer, uint8_t time[6], uint8_t device_id)
 //{
