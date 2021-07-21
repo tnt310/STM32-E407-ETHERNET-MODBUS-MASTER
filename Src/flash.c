@@ -6,6 +6,7 @@
 #include <string.h>
 /* Platform includes --------------------------------*/
 #include "main.h"
+#include "mqttclienttask.h"
 /* Private typedef -----------------------------------*/
 
 typedef uint8_t xMemHandler_t;
@@ -66,8 +67,7 @@ void xFlashLoad(void) {
 	uint32_t flashExist = 0;
 	uiFlashGet(uiAdr, (uint32_t*) &flashExist);
 	if (flashExist == 1) {
-
-//		/*Network*/
+		/*Network*/
 //		uiAdr = FLASH_NET_ADDRESS  - MEM_TEMP_OFF;
 //		uiFlashGet(uiAdr += 4, (uint32_t*) &netParam.ip);
 //		uiFlashGet(uiAdr += 4, (uint32_t*) &netParam.netmask);
@@ -78,15 +78,15 @@ void xFlashLoad(void) {
 //		uiFlashGet(uiAdr += 4, (uint32_t*) &mqttHostParam.ip);
 //		uiFlashGet(uiAdr += 4, (uint32_t*) &mqttHostParam.netmask);
 //		uiFlashGet(uiAdr += 4, (uint32_t*) &mqttHostParam.gateway);
-
-		uiAdr = FLASH_MUTEX_ADDRESS  - MEM_TEMP_OFF; // FOR MODBUS MUTEX
-		uiFlashGet(uiAdr += 4, (uint32_t*) &modbus_mutex);
-
+//
+//		uiAdr = FLASH_MUTEX_ADDRESS  - MEM_TEMP_OFF; // FOR MODBUS TELEMETRY
+//		uiFlashGet(uiAdr += 4, (uint32_t*) &modbus_telemetry);
+//
 //		uiAdr = FLASH_TIMEOUT_ADDRESS  - MEM_TEMP_OFF; //FOR TIMEOUT OF MODBUS TASK
 //		uiFlashGet(uiAdr += 4, (uint32_t*) &timeDelay);
 //
 //		uiAdr = FLASH_MQTTPORT_ADDRESS - MEM_TEMP_OFF; //FOR MQTT PORT
-//		uiFlashGet(uiAdr += 4, (uint32_t*) &mqtt_port);
+//		uiFlashGet(uiAdr += 4, (uint32_t*) &u16_mqtt_port);
 
 		printf("\r\n Loaded pre-config from Flash \r\n");
 	} else {
@@ -145,22 +145,22 @@ void xFlashSave(void) {
 //	uiFlashSet(uiAdr += 4, (uint32_t*) &netParam.ip);
 //	uiFlashSet(uiAdr += 4, (uint32_t*) &netParam.netmask);
 //	uiFlashSet(uiAdr += 4, (uint32_t*) &netParam.gateway);
-//
-//	/*MQTT Network*/
+////
+////	/*MQTT Network*/
 //	uiAdr = FLASH_HOST_ADDRESS  - MEM_TEMP_OFF;
 //	uiFlashSet(uiAdr += 4, (uint32_t*) &mqttHostParam.ip);
 //	uiFlashSet(uiAdr += 4, (uint32_t*) &mqttHostParam.netmask);
 //	uiFlashSet(uiAdr += 4, (uint32_t*) &mqttHostParam.gateway);
-
-
-	uiAdr = FLASH_MUTEX_ADDRESS  - MEM_TEMP_OFF;  // Modbus Mutex
-	uiFlashSet(uiAdr += 4, (uint32_t*) &modbus_mutex);
-
+//
+//
+//	uiAdr = FLASH_MUTEX_ADDRESS  - MEM_TEMP_OFF;  // Modbus Mutex
+//	uiFlashSet(uiAdr += 4, (uint32_t*) &modbus_mutex);
+//
 //	uiAdr = FLASH_TIMEOUT_ADDRESS  - MEM_TEMP_OFF;  // Timeout for Mdtask
 //	uiFlashSet(uiAdr += 4, (uint32_t*) &timeDelay);
 //
 //	uiAdr = FLASH_MQTTPORT_ADDRESS  - MEM_TEMP_OFF;  // Mqtt_port
-//	uiFlashSet(uiAdr += 4, (uint32_t*) &mqtt_port);
+//	uiFlashSet(uiAdr += 4, (uint32_t*) &u16_mqtt_port);
 
 
 

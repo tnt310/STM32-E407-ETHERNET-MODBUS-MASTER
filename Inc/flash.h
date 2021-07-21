@@ -71,7 +71,7 @@ uint32_t port1_baud,port1_stop,port1_databit,port1_parity;
 #define FLASH_MQTTPORT_ADDRESS	0x08070068
 
 #define FLASH_PORT1_ADDRESS		0x08070072
-#define FLASH_PORT2_ADDRESS		0x08070084
+#define FLASH_PORT2_ADDRESS		0x08070088
 
 #define FLASH_SAVED_DATA      0x01
 

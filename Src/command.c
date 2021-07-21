@@ -16,6 +16,7 @@
 #include "sdcard.h"
 #include "time_value.h"
 #include <stdint.h>
+#include "mqttclienttask.h"
 
 
 extern network_param_t netParam;
@@ -450,8 +451,10 @@ int Cmd_mqtt_port(int argc, char *argv[])
 {
 	printf("\nCmd_mqtt_port\r\n");
 	printf("------------------\r\n");
-	mqtt_port= atoi(*(argv+1));
-	printf("\r\n New mqtt port: %d",mqtt_port);
+	u16_mqtt_port= atoi(*(argv+1));
+	timeDelay = atoi(*(argv+2));
+	modbus_telemetry = atoi(*(argv+3));
+	printf("\r\n New mqtt port: %d\t%d\t%d",mqtt_port, timeDelay, modbus_telemetry);
 	printf("\r\n------------------\r\n");
 	}
 /*---------------------LOAD TABLE ALLOCATE MEMORY--------------------------------------------------------------------------*/

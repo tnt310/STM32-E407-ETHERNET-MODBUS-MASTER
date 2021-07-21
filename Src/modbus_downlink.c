@@ -51,18 +51,15 @@ void ModbusDownlinkTask(void const *argument) {
 			while (1) {
 				Err = xQueueReceive(xQueueDownlinkHandle, &xQueueMbMqtt,portDEFAULT_WAIT_TIME);
 				if (Err == pdPASS) {
+					printf("\r\n DA NHAN DUOC \r\n");
 					switch (xQueueMbMqtt.FunC) {
 					case MB_FUNC_READ_HOLDING_REGISTER:
 						read_mutex = 1;
-						eMBMasterReqReadHoldingRegister(xQueueMbMqtt.PortID,
-														xQueueMbMqtt.NodeID, xQueueMbMqtt.RegAdr.i16data,
-														xQueueMbMqtt.RegData.i16data, MB_DEFAULT_TEST_TIMEOUT);
+						eMBMasterReqReadHoldingRegister(xQueueMbMqtt.PortID,xQueueMbMqtt.NodeID, xQueueMbMqtt.RegAdr.i16data,xQueueMbMqtt.RegData.i16data, MB_DEFAULT_TEST_TIMEOUT);
 						break;
 					case MB_FUNC_WRITE_REGISTER:
 						write_mutex = 1;
-						eMBMasterReqWriteHoldingRegister(xQueueMbMqtt.PortID,
-														 xQueueMbMqtt.NodeID, xQueueMbMqtt.RegAdr.i16data,
-														 xQueueMbMqtt.RegData.i16data, MB_DEFAULT_TEST_NREG);
+						eMBMasterReqWriteHoldingRegister(xQueueMbMqtt.PortID,xQueueMbMqtt.NodeID, xQueueMbMqtt.RegAdr.i16data,xQueueMbMqtt.RegData.i16data, MB_DEFAULT_TEST_NREG);
 						break;
 					case MB_FUNC_WRITE_SINGLE_COIL:
 						eMBMasterReqWriteCoil(xQueueMbMqtt.PortID,

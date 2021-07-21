@@ -129,14 +129,10 @@ void MX_LWIP_Init(void)
   netParam.ip.idata=gnetif.ip_addr.addr;
   netParam.netmask.idata=gnetif.netmask.addr;
 	printf("\r\n System connected to LAN:");
-	printf("\r\n IP                     : %d . %d . %d . %d", netParam.ip.cdata[0],
-			netParam.ip.cdata[1], netParam.ip.cdata[2], netParam.ip.cdata[3]);
-	printf("\r\n Default Gateway        : %d . %d . %d . %d", netParam.gateway.cdata[0],
-			netParam.gateway.cdata[1], netParam.gateway.cdata[2], netParam.gateway.cdata[3]);
-	printf("\r\n Netmask                : %d . %d . %d . %d", netParam.netmask.cdata[0],
-			netParam.netmask.cdata[1], netParam.netmask.cdata[2], netParam.netmask.cdata[3]);
-	printf("\r\n IP  MQTT               : %d . %d . %d . %d", mqttHostParam.ip.cdata[0],
-			mqttHostParam.ip.cdata[1], mqttHostParam.ip.cdata[2], mqttHostParam.ip.cdata[3]);
+	printf("\r\n IP                     : %d . %d . %d . %d", netParam.ip.cdata[0],netParam.ip.cdata[1], netParam.ip.cdata[2], netParam.ip.cdata[3]);
+	printf("\r\n Default Gateway        : %d . %d . %d . %d", netParam.gateway.cdata[0],netParam.gateway.cdata[1], netParam.gateway.cdata[2], netParam.gateway.cdata[3]);
+	printf("\r\n Netmask                : %d . %d . %d . %d", netParam.netmask.cdata[0],netParam.netmask.cdata[1], netParam.netmask.cdata[2], netParam.netmask.cdata[3]);
+	printf("\r\n IP  MQTT               : %d . %d . %d . %d", mqttHostParam.ip.cdata[0],mqttHostParam.ip.cdata[1], mqttHostParam.ip.cdata[2], mqttHostParam.ip.cdata[3]);
 	printf("\r\n MQTT_ID      			: %s",mqtt_id);
 	printf("\r\n MQTT_USERNAME       	: %s",mqtt_user);
 	printf("\r\n MQTT_PASSWORK       	: %s",mqtt_password);

@@ -255,7 +255,10 @@ void MX_FREERTOS_Init(void) {
 void StartDefaultTask(void const * argument)
 {
   /* init code for LWIP */
-//	LoadSdcard("config.txt");
+	LoadSdcard("config.txt");
+	USER_USART2_UART_Init();
+	USER_USART3_UART_Init();
+	MX_LWIP_Init();
   /* USER CODE BEGIN StartDefaultTask */
 	/*Create Task Modules in this line*/
 
@@ -265,17 +268,17 @@ void StartDefaultTask(void const * argument)
 	printf("\r\n MemFree: %d", xPortGetFreeHeapSize());
 
 	/*Modbus app*/
-	osThreadDef(mbAppTask, ModbusTestTask, osPriorityNormal, 0, 4 * 128);
+	osThreadDef(mbAppTask, ModbusTestTask, osPriorityNormal, 0, 2 * 128);
 	mbAppTask = osThreadCreate(osThread(mbAppTask), NULL);
 	printf("\r\n MemFree: %d", xPortGetFreeHeapSize());
 
 	/*Modbus Downlink */
-	osThreadDef(mbDownlinkTask, ModbusDownlinkTask,osPriorityRealtime, 0, 4 * 128);
+	osThreadDef(mbDownlinkTask, ModbusDownlinkTask,osPriorityRealtime, 0, 2 * 128);
 	mbDownlinkTask= osThreadCreate(osThread(mbDownlinkTask), NULL);
 	printf("\r\n MemFree: %d", xPortGetFreeHeapSize());
 
 	/*Get time*/
-	osThreadDef(netTimeTask, NetworkTimeTask, osPriorityNormal, 0, 8 * 128);
+	osThreadDef(netTimeTask, NetworkTimeTask, osPriorityNormal, 0, 4 * 128);
 	netTimeTask = osThreadCreate(osThread(netTimeTask), NULL);
 	printf("\r\n MemFree: %d", xPortGetFreeHeapSize());
 
@@ -285,7 +288,7 @@ void StartDefaultTask(void const * argument)
 	printf("\r\n MemFree: %d", xPortGetFreeHeapSize());
 
 	/*MQTT serive*/
-	osThreadDef(netMQTTTask, netmqttTask, osPriorityNormal, 0, 10 * 256);
+	osThreadDef(netMQTTTask, netmqttTask, osPriorityNormal, 0, 14 * 256);
 	netMQTTTask = osThreadCreate(osThread(netMQTTTask), NULL);
 	printf("\r\n MemFree: %d", xPortGetFreeHeapSize());
 
@@ -313,10 +316,14 @@ void StartDefaultTask(void const * argument)
 	for (;;) {
 		switch (uiSysState) {
 		case SYS_START:
-			LoadSdcard("config.txt");
-			MX_LWIP_Init();
-			USER_USART2_UART_Init();
-			USER_USART3_UART_Init();
+//			if (LoadSdcard("config.txt") == 0){
+//				__disable_irq();
+//				xFlashLoad();
+//				__enable_irq();
+//			}
+//			MX_LWIP_Init();
+//			USER_USART2_UART_Init();
+//			USER_USART3_UART_Init();
 			printf("\r\n Task Controller: Implementing...  \r\n");
 			uiSysUpdate = TRUE;
 			uiSysState++;
@@ -338,21 +345,19 @@ void StartDefaultTask(void const * argument)
 			printf("\r\n Starting mbAppTask module:  \r\n");
 			sysError = xQueueReceive(xQueueControlHandle, &xQueueControl, portMAX_DELAY);
 			if (sysError == pdTRUE) {
-				if ((xQueueControl.xState == TASK_RUNNING)
-						&& (xQueueControl.xTask == mbAppTask)) {
+				if ((xQueueControl.xState == TASK_RUNNING) && (xQueueControl.xTask == mbAppTask)) {
 					printf("\r\n Starting mbAppTask module: OK \r\n");
 					uiSysUpdate = TRUE;
 					uiSysState++;
 
 				}
 			} else {
-				printf("\r\n Starting mbAppTask module: Responding Timeout \r\n");
+				printf("\r\n Starting Modbus Uplink module: Responding Timeout \r\n");
 			}
 			break;
 		case SYS_MB_DOWNLINK:
 			printf("\r\n Starting mbDownlinkTask module:  \r\n");
-			sysError = xQueueReceive(xQueueControlHandle, &xQueueControl,
-			portMAX_DELAY);
+			sysError = xQueueReceive(xQueueControlHandle, &xQueueControl,portMAX_DELAY);
 			if (sysError == pdTRUE) {
 				if ((xQueueControl.xState == TASK_RUNNING) && (xQueueControl.xTask == mbDownlinkTask)) {
 					printf("\r\n Starting mbDownlinkTask module: OK \r\n");
@@ -361,23 +366,29 @@ void StartDefaultTask(void const * argument)
 				}
 			} else {
 				printf("\r\n Starting mbDownlinkTask module: Responding Timeout \r\n");
-				uiSysUpdate = TRUE;
-				uiSysState++;
 			}
 			break;
 
 		case SYS_NET_TIME:
 			#define portDEFAULT_DELAY 1000
 			printf("\r\n Starting netTimeTask");
-			sysError = xQueueReceive(xQueueControlHandle, &xQueueControl, portDEFAULT_DELAY);
+			sysError = xQueueReceive(xQueueControlHandle, &xQueueControl,
+			portDEFAULT_DELAY);
 			if (sysError == pdTRUE) {
-				if ((xQueueControl.xState == TASK_RUNNING) && (xQueueControl.xTask == netTimeTask)) {
+				if ((xQueueControl.xState == TASK_RUNNING)
+						&& (xQueueControl.xTask == netTimeTask)) {
 					printf("\r\n Starting netTimeTask  module: OK \r\n");
 					uiSysUpdate = TRUE;
 					uiSysState++;
+
+					/*Warning - Delete netTimeTask to save resource !!*/
+					/*Update  - Resource is a ocean so we shouldn't think about it if we don't want to get any bugs*/
+//					vTaskDelete(netTimeTask);
+//					printf("\r\n Killing netTimeTask module: OK \r\n");
 				}
 			} else {
-				printf("\r\n Starting netTimeTask module: Responding Timeout \r\n");
+				printf(
+						"\r\n Starting netTimeTask module: Responding Timeout \r\n");
 				uiSysUpdate = TRUE;
 				uiSysState++;
 			}
@@ -385,7 +396,8 @@ void StartDefaultTask(void const * argument)
 		case SYS_CORE_DISCOV:
 			printf("\r\n Waiting for CORE discovery in %d ms:  \r\n",
 			portDEFAULT_DELAY);
-			sysError = xQueueReceive(xQueueControlHandle, &xQueueControl, portDEFAULT_DELAY);
+			sysError = xQueueReceive(xQueueControlHandle, &xQueueControl,
+			portDEFAULT_DELAY);
 			if (sysError == pdTRUE) {
 				if ((xQueueControl.xState == TASK_RUNNING)
 						&& (xQueueControl.xTask == netTcpEchoTask)) {
@@ -394,7 +406,8 @@ void StartDefaultTask(void const * argument)
 					uiSysState++;
 				} else if ((xQueueControl.xState == TASK_ERR_1)
 						&& (xQueueControl.xTask == netTcpEchoTask)) {
-					printf("\r\n  Waiting for CORE discovery: Timeout, use pre-configured MQTT server \r\n");
+					printf(
+							"\r\n  Waiting for CORE discovery: Timeout, use pre-configured MQTT server \r\n");
 				}
 			} else {
 				printf("\r\n Waiting for CORE discovery: Timeout \r\n");
@@ -404,29 +417,36 @@ void StartDefaultTask(void const * argument)
 			break;
 		case SYS_MQTT:
 			printf("\r\n Starting netMQTTTask module:  \r\n");
-			sysError = xQueueReceive(xQueueControlHandle, &xQueueControl,portDEFAULT_DELAY);
+			sysError = xQueueReceive(xQueueControlHandle, &xQueueControl,
+			portDEFAULT_DELAY);
 			if (sysError == pdTRUE) {
-				if ((xQueueControl.xState == TASK_RUNNING) && (xQueueControl.xTask == netMQTTTask)) {
+				if ((xQueueControl.xState == TASK_RUNNING)
+						&& (xQueueControl.xTask == netMQTTTask)) {
 					printf("\r\n Starting netMQTTTask module: OK \r\n");
 					uiSysUpdate = TRUE;
 					uiSysState++;
 				}
 			} else {
-				printf("\r\n Starting netMQTTTask module: Responding Timeout \r\n");
+				printf(
+						"\r\n Starting netMQTTTask module: Responding Timeout \r\n");
 				uiSysUpdate = TRUE;
 				uiSysState++;
 			}
 			break;
 		case SYS_HTTP:
-			sysError = xQueueReceive(xQueueControlHandle, &xQueueControl,portMAX_DELAY);
+			sysError = xQueueReceive(xQueueControlHandle, &xQueueControl,
+			portMAX_DELAY);
 			if (sysError == pdTRUE) {
-				if ((xQueueControl.xState == TASK_RUNNING) && (xQueueControl.xTask == netHTTPTask)) {
+				if ((xQueueControl.xState == TASK_RUNNING)
+						&& (xQueueControl.xTask == netHTTPTask)) {
 					printf("\r\n Starting netHTTPTask module: OK \r\n");
 					uiSysUpdate = TRUE;
 					uiSysState++;
+
 				}
 			} else {
-				printf("\r\n Starting netHTTPTask module: Responding Timeout \r\n");
+				printf(
+						"\r\n Starting netHTTPTask module: Responding Timeout \r\n");
 				uiSysUpdate = TRUE;
 				uiSysState++;
 			}
@@ -524,26 +544,27 @@ void Callback01(void const * argument)
  *
  * */
 void FlashTask(void *arg) {
-	xFlashSave();
-	vTaskDelay(100);
-	NVIC_SystemReset();
+	//xFlashSave();
+	//vTaskDelay(100);
+	//NVIC_SystemReset();
 	while (1)
 		;
-
 }
 void ResetHandlerTask(void *arg)
+
 {
 	BaseType_t err = pdFALSE;
 	uint32_t handle;
 	while (1)
+
 	{
 		err = xQueueReceive(xQueueResetHandle, &handle, portMAX_DELAY);
 		if (err == pdTRUE) {
 			if (handle == 1) {
 				osThreadDef(flashSave, FlashTask, osPriorityRealtime,0, 2 * 128);
 				flashTask = osThreadCreate(osThread(flashSave), NULL);
-				xFlashSave();
-				osDelay(10);
+				//xFlashSave();
+				//osDelay(10);
 				printf("\r\n System reset \r\n");
 				NVIC_SystemReset();
 			}
@@ -551,30 +572,5 @@ void ResetHandlerTask(void *arg)
 		vTaskDelay(100);
 	}
 }
-/*--------------------WRITE DEVICE PARAMETER INTO SDCARD--------------------------------------------------------------------------------------*/
-//void SdcardTask(void *arg) {
-//
-//	while (1)
-//		;
-//}
-//void SdcardHandlerTask(void *arg)
-//{
-//	BaseType_t err = pdFALSE;
-//	uint32_t handle;
-//	while (1)
-//	{
-//		err = xQueueReceive(xQueueResetHandle, &handle, portMAX_DELAY);
-//		if (err == pdTRUE) {
-//			if (handle == 2) {
-//				MX_FATFS_Init();
-//				fR = f_mount(&fs, "", 1);
-//				fR= f_open(&fil,"sdio.txt", FA_READ);
-//				f_gets(SDbuffer, sizeof(SDbuffer),&fil);
-//				fR = f_close(&fil);
-//				osDelay(10);
-//			}
-//		}
-//		vTaskDelay(100);
-//	}
-//}
+
 /* USER CODE END Application */

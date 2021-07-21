@@ -140,7 +140,7 @@ void parse_sdcardInfo(char *Buffer, uint16_t BufferLen)
 			}
 			break;
 		}else if (jsoneq(Buffer, &t[i], "mqtt") == 0){
-			printf("\r\n - mqtt: %.*s\r\n", t[i + 1].end - t[i + 1].start,Buffer + t[i + 1].start);
+			//printf("\r\n - mqtt: %.*s\r\n", t[i + 1].end - t[i + 1].start,Buffer + t[i + 1].start);
 			for (uint8_t j = i; j < r-1; j++){
 				if (jsoneq(Buffer, &t[j], "mqttId") == 0){
 					//printf("\r\n -mqttId: %.*s\r\n", t[j + 1].end - t[j + 1].start,Buffer + t[j + 1].start);
@@ -170,14 +170,14 @@ void parse_sdcardInfo(char *Buffer, uint16_t BufferLen)
 					mqtt_password = passwork;
 					j++;
 				}else if (jsoneq(Buffer, &t[j], "port") == 0){
-					printf("\r\n -port: %.*s\r\n", t[j + 1].end - t[j + 1].start,Buffer + t[j + 1].start);
+					//printf("\r\n -port: %.*s\r\n", t[j + 1].end - t[j + 1].start,Buffer + t[j + 1].start);
 					u16_mqtt_port= atoi(Buffer + t[j + 1].start);
 					j++;
 				}
 			}
 			break;
 		}else if (jsoneq(Buffer, &t[i], "rs232") == 0){
-			printf("\r\n - rs232: %.*s\r\n", t[i + 1].end - t[i + 1].start,Buffer + t[i + 1].start);
+			//printf("\r\n - rs232: %.*s\r\n", t[i + 1].end - t[i + 1].start,Buffer + t[i + 1].start);
 			for (uint8_t j = i; j < r-1; j++){
 				if (jsoneq(Buffer, &t[j], "baud") == 0){
 					//printf("\r\n -baud: %.*s\r\n", t[j + 1].end - t[j + 1].start,Buffer + t[j + 1].start);
@@ -195,7 +195,7 @@ void parse_sdcardInfo(char *Buffer, uint16_t BufferLen)
 			}
 			break;
 		}else if (jsoneq(Buffer, &t[i], "port0") == 0){
-			printf("\r\n - port0: %.*s\r\n", t[i + 1].end - t[i + 1].start,Buffer + t[i + 1].start);
+			//printf("\r\n - port0: %.*s\r\n", t[i + 1].end - t[i + 1].start,Buffer + t[i + 1].start);
 			for (uint8_t j = i; j < r-1; j++){
 				if (jsoneq(Buffer, &t[j], "baud") == 0){
 					//printf("\r\n -baud: %.*s\r\n", t[j + 1].end - t[j + 1].start,Buffer + t[j + 1].start);
@@ -217,7 +217,7 @@ void parse_sdcardInfo(char *Buffer, uint16_t BufferLen)
 			}
 			break;
 		}else if (jsoneq(Buffer, &t[i], "port1") == 0){
-			printf("\r\n - port1: %.*s\r\n", t[i + 1].end - t[i + 1].start,Buffer + t[i + 1].start);
+			//printf("\r\n - port1: %.*s\r\n", t[i + 1].end - t[i + 1].start,Buffer + t[i + 1].start);
 			for (uint8_t j = i; j < r-1; j++){
 				if (jsoneq(Buffer, &t[j], "baud") == 0){
 					//printf("\r\n -baud: %.*s\r\n", t[j + 1].end - t[j + 1].start,Buffer + t[j + 1].start);
@@ -239,7 +239,7 @@ void parse_sdcardInfo(char *Buffer, uint16_t BufferLen)
 			}
 			break;
 		}else if (jsoneq(Buffer, &t[i], "timeout") == 0){
-			printf("\r\n - timeout: %.*s\r\n", t[i + 1].end - t[i + 1].start,Buffer + t[i + 1].start);
+			//printf("\r\n - timeout: %.*s\r\n", t[i + 1].end - t[i + 1].start,Buffer + t[i + 1].start);
 			timeDelay = atoi(Buffer + t[i + 1].start);
 			break;
 		}else if (jsoneq(Buffer, &t[i], "telemetry") == 0){
@@ -445,14 +445,6 @@ void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_top
 							ftoa(ftoastr, res, xQueueMbMqtt.scale);
 							command_read_json(head, xQueueMbMqtt.NodeID, xQueueMbMqtt.RegAdr.i16data,ftoastr);
 						}
-					}else if(xQueueMbMqtt.flag64 == 1){  // U64, I64
-						xQueueMbMqtt.flag64 = 0;
-					    memset(res,'\0',sizeof(res));
-					    memset(ftoastr,'\0',sizeof(ftoastr));
-					    char *s = itoa_user(xQueueMbMqtt.RegData64.i64data, 10);
-					    printf("\r\n Command value: %s",s);
-					    ftoa(ftoastr, itoa_user(xQueueMbMqtt.RegData64.i64data, 10), 1000);
-						command_read_json(head, xQueueMbMqtt.NodeID, xQueueMbMqtt.RegAdr.i16data,ftoastr);
 					}else{   // U16, I16
 						if (xQueueMbMqtt.gotflagvalue == 0){
 						    memset(res,'\0',sizeof(res));
@@ -696,7 +688,6 @@ uint8_t mqtt_modbus_thread_down_command(char *pJsonMQTTBuffer,uint16_t pJsonMQTT
 			printf("Failed to parse JSON: %d\n", r);
 			return 1;
 		}
-
 		/* Assume the top-level element is an object */
 		if (r < 1 || t[0].type != JSMN_OBJECT) {
 			printf("Object expected\n");
@@ -724,7 +715,6 @@ uint8_t mqtt_modbus_thread_down_command(char *pJsonMQTTBuffer,uint16_t pJsonMQTT
 					xQueueMbMqtt.FunC = 6;
 					i++;
 				}
-
 			}
 			else if (jsoneq(pJsonMQTTBuffer, &t[i], "value") == 0) {
 				char val[10];
@@ -745,7 +735,7 @@ uint8_t mqtt_modbus_thread_down_command(char *pJsonMQTTBuffer,uint16_t pJsonMQTT
 		BaseType_t Err = pdFALSE;
 		Err = xQueueSend(xQueueDownlinkHandle, &xQueueMbMqtt,portDEFAULT_WAIT_TIME);
 		if (Err == pdPASS) {
-			memset(pJsonMQTTBuffer,'\0',pJsonMQTTBufferLen);
+			//memset(pJsonMQTTBuffer,'\0',pJsonMQTTBufferLen);
 		} else {
 			printf("\r\n Modbus_MQTT Downlink queued: False \r\n");
 		}

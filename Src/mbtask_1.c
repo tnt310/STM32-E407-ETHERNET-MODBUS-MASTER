@@ -209,6 +209,7 @@ eMBErrorCode eMBMasterRegHoldingCB(UCHAR ucPort, UCHAR * pucRegBuffer, USHORT us
 		float_t = 1;
 	}
 	uint8_t reg_temp = usNRegs;
+	//printf("\r\n DA VAO CB with reg: %d\r\n",reg_temp);
 	if ((usAddress >= REG_HOLDING_START)&& ((uint8_t)usAddress + usNRegs <= REG_HOLDING_START + REG_HOLDING_NREGS)) {
 		iRegIndex = usAddress - REG_HOLDING_START;
 		switch (eMode) {
@@ -286,9 +287,6 @@ eMBErrorCode eMBMasterRegHoldingCB(UCHAR ucPort, UCHAR * pucRegBuffer, USHORT us
 						pusRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
 						iRegIndex++;
 						usNRegs--;
-						//char buffer[20];
-						//FloatToString(buffer, xQueueMbMqtt.RegData32.i32data);
-						//printf("\r\n FLOAT32 on CB : %s \r\n",buffer);
 						xQueueMbMqtt.gotflagvalue = 2;
 					}
 					xQueueMbMqtt.flag32 = 1;
@@ -353,7 +351,7 @@ eMBErrorCode eMBMasterRegHoldingCB(UCHAR ucPort, UCHAR * pucRegBuffer, USHORT us
 					xQueueMbMqtt.flag64 = 1;
 				}
 			}
-			if (read_mutex == 1 || read_mutex == 2){
+			if (read_mutex == 1){
 				goto MUTEX;
 			}
 			break;
@@ -382,9 +380,7 @@ eMBErrorCode eMBMasterRegHoldingCB(UCHAR ucPort, UCHAR * pucRegBuffer, USHORT us
 	 	 	 read_mutex = 0;
 	 	 	 write_mutex = 0;
 			xQueueMbMqtt.gotflagcommand = 3;
-		}else if (write_mutex == 2 || read_mutex == 2){
-	 	 	 read_mutex = 0;
-	 	 	 write_mutex = 0;
+			//printf("\r\n CHUAN BI GUI QUEUE with: %d\t%d \r\n",xQueueMbMqtt.NodeID, xQueueMbMqtt.RegData.i16data);
 		}
 		BaseType_t Err = pdFALSE;
 		Err = xQueueSend(xQueueUplinkHandle, &xQueueMbMqtt,portDEFAULT_WAIT_TIME);
