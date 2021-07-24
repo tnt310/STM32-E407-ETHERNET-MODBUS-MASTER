@@ -195,6 +195,7 @@ eMBErrorCode eMBMasterRegHoldingCB(UCHAR ucPort, UCHAR * pucRegBuffer, USHORT us
 	usAddress--; // must have if u do not want to be stupid
 	xQueueMbMqtt.RegAdr.i8data[0] = (uint8_t)usAddress;
 	xQueueMbMqtt.RegAdr.i8data[1] = (uint8_t)(usAddress >> 8);
+	uint8_t reg_temp = usNRegs;
 	for (uint8_t i = 0; i < num_device; i++){
 		if ((dynamic+i)->channel == xQueueMbMqtt.PortID  && (dynamic+i)->deviceID == xQueueMbMqtt.NodeID && (dynamic+i)->deviceChannel == xQueueMbMqtt.RegAdr.i16data){
 				memset(buffer,'\0',sizeof(buffer));
@@ -208,7 +209,6 @@ eMBErrorCode eMBMasterRegHoldingCB(UCHAR ucPort, UCHAR * pucRegBuffer, USHORT us
 	}else if(strstr(buffer,"FLOAT32") != NULL){
 		float_t = 1;
 	}
-	uint8_t reg_temp = usNRegs;
 	//printf("\r\n DA VAO CB with reg: %d\r\n",reg_temp);
 	if ((usAddress >= REG_HOLDING_START)&& ((uint8_t)usAddress + usNRegs <= REG_HOLDING_START + REG_HOLDING_NREGS)) {
 		iRegIndex = usAddress - REG_HOLDING_START;

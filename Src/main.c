@@ -133,20 +133,20 @@ int main(void)
   MX_SDIO_SD_Init();
   MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
-	for(int i =0; i <2; i++)
+	for(int i =0; i < 2; i++)
 	{
 		HAL_GPIO_TogglePin(USART2_LED_GPIO_Port,USART2_LED_Pin );
 		HAL_Delay(100);
-		HAL_GPIO_TogglePin(USART3_LED_GPIO_Port,USART2_LED_Pin );
+		HAL_GPIO_TogglePin(USART3_LED_GPIO_Port,USART3_LED_Pin );
 		HAL_Delay(100);
 	}
 	__HAL_UART_ENABLE_IT(&huart6, UART_IT_RXNE);
 	printf("\r\n ********* Access Controller Board **************** \r\n");
-	printf("\r\n TRAN NGOC TRAM\r\n");
+	printf("\r\n MODBUS IOT GATEWAY \r\n");
 	printf("\r\n System  starting \r\n");
-	__disable_irq();
+//	__disable_irq();
 //	xFlashLoad();
-	__enable_irq();
+//	__enable_irq();
   /* USER CODE END 2 */
   /* Call init function for freertos objects (in freertos.c) */
   MX_FREERTOS_Init();

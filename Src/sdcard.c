@@ -11,10 +11,11 @@
 #include <stdio.h>
 #include "sdcard.h"
 
-uint8_t SD_Device(char buffer[200],uint8_t port,uint8_t deviceID,uint8_t func,char *deviceChannel,char *deviceType,char *deviceTitle,char *deviceName,char *valueType, uint8_t devicestatus, uint16_t scale, uint8_t numreg)
+//{"PORT":0,"ID":10,"FC":3,"CHANNEL":"3060","DEVICETYPE":"METER","DEVICENAME":"METER_01","CHANNELTITLE":"ATIVE_POWER_TOTAL","VALUETYPE":"NUMBER","REGTYPE":"FLOAT32","SCALE":1,"DEVICESTATUS":0}
+uint8_t SD_Device(char buffer[300],uint8_t port,uint8_t deviceID,uint8_t func,char *deviceChannel,char *deviceType,char *deviceName,char *deviceTitle,char *valueType, char *regtype, uint16_t scale, uint8_t devicestatus)
 {
-    memset(buffer,'\0',200);
-    sprintf(buffer,"{\"PORT\":%d,\"ID\":%d,\"FC\":%d,\"CHANNEL\":\"%s\",\"DEVICETYPE\":\"%s\",\"DEVICENAME\":\"%s\",\"CHANNELTITLE\":\"%s\",\"VALUETYPE\":\"%s\",\"NUMREG\":%d,\"SCALE\":%d\"DEVICESTATUS\":%d}\n",port,deviceID,func,deviceChannel,deviceType,deviceName,deviceTitle,valueType,numreg,scale,devicestatus);
+    memset(buffer,'\0',sizeof(buffer));
+    sprintf(buffer,"{\"PORT\":%d,\"ID\":%d,\"FC\":%d,\"CHANNEL\":\"%s\",\"DEVICETYPE\":\"%s\",\"DEVICENAME\":\"%s\",\"CHANNELTITLE\":\"%s\",\"VALUETYPE\":\"%s\",\"REGTYPE\":\"%s\",\"SCALE\":%d,\"DEVICESTATUS\":%d}\n",port,deviceID,func,deviceChannel,deviceType,deviceName,deviceTitle,valueType,regtype,scale,devicestatus);
 }
 //{"network":{"ip":"192.168.100.111","netmask":"255.255.255.0","gateway":"192.168.100.1","broker":"95.111.195.76"}}
 uint8_t SD_Network(char buffer[200],char *ip, char *netmask, char *gateway)

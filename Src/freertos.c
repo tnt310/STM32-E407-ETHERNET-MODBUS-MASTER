@@ -551,12 +551,10 @@ void FlashTask(void *arg) {
 		;
 }
 void ResetHandlerTask(void *arg)
-
 {
 	BaseType_t err = pdFALSE;
 	uint32_t handle;
 	while (1)
-
 	{
 		err = xQueueReceive(xQueueResetHandle, &handle, portMAX_DELAY);
 		if (err == pdTRUE) {

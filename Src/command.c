@@ -117,7 +117,7 @@ tCmdLineEntry g_psCmdTable[] = {
 		{ "offmutex", Cmd_off_mutex," : Send provision request" },
 		{ "check",Cmd_delete_device," : Update network" },
 		{ "deletechannel",Cmd_delete_channel," : Send provision request" },
-		{ "setdevice", Cmd_set_device," : Send provision request" },
+		{ "device", Cmd_set_device," : Send provision request" },
 		{ "setconfig", Cmd_set_config," : Send provision request" },
 		{ "touch",Cmd_new_file," : Send provision request" },
 		{ "rm",Cmd_delete_file," : Send provision request" },
@@ -332,7 +332,7 @@ int Cmd_set_device(int argc, char *argv[])
 {
 	printf("\nCmd_write_sdcard\r\n");
 	printf("------------------\r\n");
-	char buffer[200];
+	char buffer[300];
 	uint8_t port= atoi(*(argv+1));
 	uint8_t deviceID = atoi(*(argv+2));
 	uint8_t func = atoi(*(argv+3));
@@ -341,9 +341,10 @@ int Cmd_set_device(int argc, char *argv[])
 	char *deviceName = *(argv+6);
 	char *deviceTitle= *(argv+7);
 	char *valueType= *(argv+8);
+	char *regtype = *(argv+9);
+	uint16_t scale = atoi(*(argv+10));
 	uint8_t deviceStatus = 0;
-	uint16_t scale = atoi(*(argv+9));
-	//SD_Device(buffer,port,deviceID,func,deviceChannel,deviceType,deviceTitle,deviceName,valueType,deviceStatus,scale);
+	SD_Device(buffer, port, deviceID, func, deviceChannel, deviceType, deviceName, deviceTitle, valueType, regtype, scale, deviceStatus);
 	uint8_t status = write_sdcard("test.txt", buffer);
 	if (status == 1){
 		printf("\r\n write data status: %d\r\n",status);
