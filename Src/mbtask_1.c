@@ -107,7 +107,7 @@ void ModbusTestTask(void const *argument) {
 	uint8_t count = 0;
 	while (1) {
 		while(modbus_telemetry){
-			HAL_Delay(500);
+			HAL_Delay(1000);
 					for (uint8_t i = 0;i < num_device ; i++){
 						for (uint8_t j = 0; j < num_device ; j++){
 							if ((dynamic + j)->deviceID == (dynamic +i)->deviceID && (dynamic +i)->deviceID != (dynamic +i-1)->deviceID){
@@ -153,7 +153,7 @@ void ModbusTestTask(void const *argument) {
 				                            		}
 				                            		break;
 				                            	}
-				                            	HAL_Delay(200);
+				                            	HAL_Delay(100);
 				                            }
 				                        }
 				                    }
@@ -196,6 +196,9 @@ eMBErrorCode eMBMasterRegHoldingCB(UCHAR ucPort, UCHAR * pucRegBuffer, USHORT us
 	xQueueMbMqtt.RegAdr.i8data[0] = (uint8_t)usAddress;
 	xQueueMbMqtt.RegAdr.i8data[1] = (uint8_t)(usAddress >> 8);
 	uint8_t reg_temp = usNRegs;
+	if (read_mutex == 1 || write_mutex ==1){
+		goto COMMAND;
+	}
 	for (uint8_t i = 0; i < num_device; i++){
 		if ((dynamic+i)->channel == xQueueMbMqtt.PortID  && (dynamic+i)->deviceID == xQueueMbMqtt.NodeID && (dynamic+i)->deviceChannel == xQueueMbMqtt.RegAdr.i16data){
 				memset(buffer,'\0',sizeof(buffer));
@@ -209,7 +212,6 @@ eMBErrorCode eMBMasterRegHoldingCB(UCHAR ucPort, UCHAR * pucRegBuffer, USHORT us
 	}else if(strstr(buffer,"FLOAT32") != NULL){
 		float_t = 1;
 	}
-	//printf("\r\n DA VAO CB with reg: %d\r\n",reg_temp);
 	if ((usAddress >= REG_HOLDING_START)&& ((uint8_t)usAddress + usNRegs <= REG_HOLDING_START + REG_HOLDING_NREGS)) {
 		iRegIndex = usAddress - REG_HOLDING_START;
 		switch (eMode) {
@@ -376,11 +378,62 @@ eMBErrorCode eMBMasterRegHoldingCB(UCHAR ucPort, UCHAR * pucRegBuffer, USHORT us
 				xQueueMbMqtt.scale = (dynamic+i)->scale;
 			}
 		}
+ COMMAND:
+ 	if (read_mutex==1 || write_mutex==1){
+ 		printf("\r\n GOTO COMMAND with reg: %d\r\n",reg_temp);
+ 		if ((usAddress >= REG_HOLDING_START)&& ((uint8_t)usAddress + usNRegs <= REG_HOLDING_START + REG_HOLDING_NREGS)) {
+ 			iRegIndex = usAddress - usRegHoldStart;
+ 			switch (eMode){
+ 			case MB_REG_WRITE:
+ 				xQueueMbMqtt.FunC = MB_FUNC_WRITE_REGISTER;
+ 				while (usNRegs > 0) {
+ 					xQueueMbMqtt.RegData.i8data[1] = (*pucRegBuffer);
+ 					xQueueMbMqtt.RegData.i8data[0] = *(pucRegBuffer + 1);
+ 					*pucRegBuffer++ = (UCHAR) (pusRegHoldingBuf[iRegIndex] >> 8);
+ 					*pucRegBuffer++ = (UCHAR) (pusRegHoldingBuf[iRegIndex] & 0xFF);
+ 					iRegIndex++;
+ 					usNRegs--;
+ 				}
+ 				break;
+ 			case MB_REG_READ:
+ 				xQueueMbMqtt.FunC = MB_FUNC_READ_HOLDING_REGISTER;
+ 				while (usNRegs > 0) {
+ 					if (reg_temp == 2){
+ 						xQueueMbMqtt.RegData32.i8data[1] = *(pucRegBuffer);  // byte 1
+ 						xQueueMbMqtt.RegData32.i8data[0] = *(pucRegBuffer + 1);// byte 0
+ 						pusRegHoldingBuf[iRegIndex] = *pucRegBuffer++ << 8;
+ 						pusRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
+ 						iRegIndex++;
+ 						usNRegs--;
+ 						xQueueMbMqtt.RegData32.i8data[3] = *(pucRegBuffer);  // byte 1
+ 						xQueueMbMqtt.RegData32.i8data[2] = *(pucRegBuffer + 1);// byte 0
+ 						pusRegHoldingBuf[iRegIndex] = *pucRegBuffer++ << 8;
+ 						pusRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
+ 						iRegIndex++;
+ 						usNRegs--;
+ 						xQueueMbMqtt.gotflagvalue = 0;
+ 						xQueueMbMqtt.flag32 = 1;
+ 						printf("\r\n U32 on CB : %d \r\n",xQueueMbMqtt.RegData32.i32data);
+ 					}else {
+ 						xQueueMbMqtt.RegData.i8data[1] = *(pucRegBuffer);  // byte 1
+ 						xQueueMbMqtt.RegData.i8data[0] = *(pucRegBuffer + 1);// byte 0
+ 						pusRegHoldingBuf[iRegIndex] = *pucRegBuffer++ << 8;
+ 						pusRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
+ 						iRegIndex++;
+ 						usNRegs--;
+ 						xQueueMbMqtt.gotflagvalue = 0;
+ 						printf("\r\n U16 on CB : %d\r\n",xQueueMbMqtt.RegData.i16data);
+ 					}
+ 				}
+ 				break;
+ 			}
+ 		}
+ 	}
 		if (write_mutex == 1 || read_mutex == 1){
 	 	 	 read_mutex = 0;
 	 	 	 write_mutex = 0;
+	 	 	 xQueueMbMqtt.scale = 1;
 			xQueueMbMqtt.gotflagcommand = 3;
-			//printf("\r\n CHUAN BI GUI QUEUE with: %d\t%d \r\n",xQueueMbMqtt.NodeID, xQueueMbMqtt.RegData.i16data);
 		}
 		BaseType_t Err = pdFALSE;
 		Err = xQueueSend(xQueueUplinkHandle, &xQueueMbMqtt,portDEFAULT_WAIT_TIME);

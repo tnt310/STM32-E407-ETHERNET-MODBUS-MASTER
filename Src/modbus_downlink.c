@@ -51,7 +51,7 @@ void ModbusDownlinkTask(void const *argument) {
 			while (1) {
 				Err = xQueueReceive(xQueueDownlinkHandle, &xQueueMbMqtt,portDEFAULT_WAIT_TIME);
 				if (Err == pdPASS) {
-					printf("\r\n DA NHAN DUOC \r\n");
+					//printf("\r\n DA NHAN DUOC \r\n");
 					switch (xQueueMbMqtt.FunC) {
 					case MB_FUNC_READ_HOLDING_REGISTER:
 						read_mutex = 1;

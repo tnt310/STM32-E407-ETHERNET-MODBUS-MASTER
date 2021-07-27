@@ -50,6 +50,7 @@ char record[500];
 FATFS fs;
 FIL fil;
 FRESULT fresult,fre;
+extern size_t done;
 /* Private Variables -------------------------*/
 uint8_t mqtt_couter_err = 0;
 char buffer[100];
@@ -402,26 +403,23 @@ void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_top
 				                            if ((dynamic+z)->deviceID == (dynamic+j)->deviceID){
 				                            	tail_provision(tail,(dynamic+z)->deviceChannel,(dynamic+z)->channeltitle,(dynamic+z)->valueType, (dynamic+z)->func);
 				                                strcat(head,tail);
-				                                printf("\r\n lentf of head: %d", strlen(head));
+				                                //printf("\r\n lentf of head: %d", strlen(head));
 				                            }
 				                        }
 				                        head[strlen(head) - 1] = '\0';
 				                        strcat(head,"]}]}");
+				                        printf("\r\n head lenght: %d\r\n", strlen(head));
 				                        err = mqtt_publish(client,pro_topic, head,strlen(head), QOS_0, 0,mqtt_bridge_provision_request_cb,NULL);
 				                        memset(head,'\0',sizeof(head));
+				                        memset(tail,'\0',sizeof(tail));
 										if (err != ERR_OK) {
 											printf("\r\n Publish Provision err: %d\n", err);
 											}
-										//osDelay(200);
 				                    }
 				            }
 				        }
 				        TEST: count = 0;
 				    }
-					BaseType_t er = pdFALSE;
-					er = xQueueSend(xQueueDownlinkHandle, &xQueueMbMqtt,portDEFAULT_WAIT_TIME);
-					if (er == pdPASS) {
-					}
 				}else if (xQueueMbMqtt.gotflagcommand == 3){  // check command
 				if (xQueueMbMqtt.FunC == 3){
 					if (xQueueMbMqtt.flag32 == 1){  // U32, I32
@@ -450,13 +448,13 @@ void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_top
 						    memset(res,'\0',sizeof(res));
 						    memset(ftoastr,'\0',sizeof(ftoastr));
 							sprintf(res,"%d",xQueueMbMqtt.RegData.i16data);
-							ftoa(ftoastr, res, 1000);
+							ftoa(ftoastr, res, xQueueMbMqtt.scale);
 							command_read_json(head, xQueueMbMqtt.NodeID, xQueueMbMqtt.RegAdr.i16data,ftoastr);
 						}else if (xQueueMbMqtt.gotflagvalue == 1){
 						    memset(res,'\0',sizeof(res));
 						    memset(ftoastr,'\0',sizeof(ftoastr));
 							sprintf(res,"%d",xQueueMbMqtt.IRegData.i16data);
-							ftoa(ftoastr, res, 1000);
+							ftoa(ftoastr, res, xQueueMbMqtt.scale);
 							command_read_json(head, xQueueMbMqtt.NodeID, xQueueMbMqtt.RegAdr.i16data,ftoastr);
 						}
 					}
@@ -513,7 +511,8 @@ void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_top
 					memset(head,'\0',sizeof(head));
 					memset(tail,'\0',sizeof(tail));
 					counter = 0;
-				}
+				}else if (err == ERR_OK)
+					done ++;
 				memset(head,'\0',sizeof(head));
 				memset(tail,'\0',sizeof(tail));
 				counter = 0;

@@ -39,7 +39,7 @@ DIR dirOject;
 FILINFO fileInfo;
 char SDbuffer[200];
 uint8_t record[200];
-size_t packet, error;
+size_t packet, error, done;
 
 uint32_t mqtt_port;
 uint32_t modbus_mutex;
@@ -101,7 +101,7 @@ tCmdLineEntry g_psCmdTable[] = {
 		{ "port1",Cmd_set_port1," : Send provision request" },
 		{ "apikey",Cmd_set_apikey," : Send provision request" },
 		{ "timeout",Cmd_set_timeout," : Send provision request" },
-		{ "sendprovision", Cmd_send_provision," : Send provision request"},
+		{ "provision", Cmd_send_provision," : Send provision request"},
 		{ "telemetry",Cmd_set_telemetry," : Send provision request" },
 
 		{ "gettime",Cmd_get_time," : Send provision request" },
@@ -859,10 +859,9 @@ uint8_t FloatToString(char buffer[20], uint32_t float_value)
 }
 int Cmd_test(int argc, char *argv[])
 {
-	printf("\nCmd_set_test\r\n");
-	printf("------------------\r\n");
 	printf("\r\n Done-packet: %d \r\n", packet);
 	printf("\r\n Fail-packet: %d \r\n", error);
+	printf("\r\n Total_publish: %d \r\n", done);
 
 }
 

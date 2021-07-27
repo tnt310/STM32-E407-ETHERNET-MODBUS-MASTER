@@ -375,20 +375,17 @@ void StartDefaultTask(void const * argument)
 			sysError = xQueueReceive(xQueueControlHandle, &xQueueControl,
 			portDEFAULT_DELAY);
 			if (sysError == pdTRUE) {
-				if ((xQueueControl.xState == TASK_RUNNING)
-						&& (xQueueControl.xTask == netTimeTask)) {
+				if ((xQueueControl.xState == TASK_RUNNING) && (xQueueControl.xTask == netTimeTask)) {
 					printf("\r\n Starting netTimeTask  module: OK \r\n");
 					uiSysUpdate = TRUE;
 					uiSysState++;
-
 					/*Warning - Delete netTimeTask to save resource !!*/
 					/*Update  - Resource is a ocean so we shouldn't think about it if we don't want to get any bugs*/
 //					vTaskDelete(netTimeTask);
 //					printf("\r\n Killing netTimeTask module: OK \r\n");
 				}
 			} else {
-				printf(
-						"\r\n Starting netTimeTask module: Responding Timeout \r\n");
+				printf("\r\n Starting netTimeTask module: Responding Timeout \r\n");
 				uiSysUpdate = TRUE;
 				uiSysState++;
 			}
@@ -406,8 +403,7 @@ void StartDefaultTask(void const * argument)
 					uiSysState++;
 				} else if ((xQueueControl.xState == TASK_ERR_1)
 						&& (xQueueControl.xTask == netTcpEchoTask)) {
-					printf(
-							"\r\n  Waiting for CORE discovery: Timeout, use pre-configured MQTT server \r\n");
+					printf("\r\n  Waiting for CORE discovery: Timeout, use pre-configured MQTT server \r\n");
 				}
 			} else {
 				printf("\r\n Waiting for CORE discovery: Timeout \r\n");

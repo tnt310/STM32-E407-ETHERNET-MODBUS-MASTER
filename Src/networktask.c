@@ -500,9 +500,9 @@ void LoginWebPage(struct netconn *conn) {
  * @pram: tcp conn pointer
  * */
 static void timer_nist_serve(struct netconn *conn) {
+
 	RTC_TimeTypeDef sTime = { 0 };
 	RTC_DateTypeDef sDate = { 0 };
-
 	struct netbuf *inbuf;
 	err_t recv_err;
 	char *buf;
@@ -638,7 +638,6 @@ void NetworkTimeTask(void const *arg) {
 	if (conn != NULL) {
 		/* Bind to port 13 with default IP address */
 		err = netconn_bind(conn, NULL, 13);
-
 		if (err == ERR_OK) {
 			/* Put the connection into LISTEN state */
 			netconn_connect(conn, TimeNistIP, 13);
@@ -648,8 +647,7 @@ void NetworkTimeTask(void const *arg) {
 			xQueueControl.xState = TASK_RUNNING;
 			xQueueSend(xQueueControlHandle, &xQueueControl, 10);
 			while (1) {
-
-				osDelay(1000);
+				osDelay(1);
 			}
 		} else {
 			printf("\r\n Failled to the network time \r\n");
