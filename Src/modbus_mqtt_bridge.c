@@ -79,6 +79,7 @@ data1_t test;
 data1_t *dynamic;
 uint8_t id_temp[2];
 uint8_t num_device;
+uint8_t status, status_temp;
 /* Start implementation ----------------------*/
 
 char *allocate(char *src)
@@ -354,6 +355,12 @@ static void mqtt_bridge_provision_request_cb(void *arg, err_t result) {
 	} else {
 	}
 }
+static void mqtt_bridge_time_request_cb(void *arg, err_t result) {
+	if (result != ERR_OK) {
+		printf("\r\n Publish time result: %d\n", result);
+	} else {
+	}
+}
 static void mqtt_bridge_command_request_cb(void *arg, err_t result) {
 	if (result != ERR_OK) {
 		printf("\r\n Publish command result: %d\n", result);
@@ -361,8 +368,10 @@ static void mqtt_bridge_command_request_cb(void *arg, err_t result) {
 	}
 }
 /*----------------------------------------------------UP/DOWNLINK FUNCTION--------------------------------------------------------------------------*/
-void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_topic, char* command_topic) {
+void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_topic, char* command_topic, char *time_topic) {
 
+	char *hello_server = "{time}";
+	mqtt_publish(client,time_topic,hello_server,strlen(hello_server), QOS_0, 0,mqtt_bridge_time_request_cb,NULL);
 	uint8_t time[6];
 	static uint8_t counter = 0;
 	static uint8_t telemetry = 0;
@@ -379,8 +388,7 @@ void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_top
 	while (1) {
 		Err = xQueueReceive(xQueueUplinkHandle, &xQueueMbMqtt,portDEFAULT_WAIT_TIME*3);
 		if (Err == pdPASS) {
-			if (xQueueMbMqtt.gotflagProvision == 1)  // check provision ?
-				{
+			if (xQueueMbMqtt.gotflagProvision == 2){
 					err_t err;
 					uint8_t SUM = xQueueMbMqtt.sum_dev;
 				    for (uint8_t i = 0; i < SUM; i++)// duyệt từng phần tử trong mảng
@@ -403,23 +411,34 @@ void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_top
 				                            if ((dynamic+z)->deviceID == (dynamic+j)->deviceID){
 				                            	tail_provision(tail,(dynamic+z)->deviceChannel,(dynamic+z)->channeltitle,(dynamic+z)->valueType, (dynamic+z)->func);
 				                                strcat(head,tail);
-				                                //printf("\r\n lentf of head: %d", strlen(head));
 				                            }
 				                        }
 				                        head[strlen(head) - 1] = '\0';
 				                        strcat(head,"]}]}");
-				                        printf("\r\n head lenght: %d\r\n", strlen(head));
+				                        printf("\r\n Lenght of provision: %d\r\n", strlen(head));
 				                        err = mqtt_publish(client,pro_topic, head,strlen(head), QOS_0, 0,mqtt_bridge_provision_request_cb,NULL);
 				                        memset(head,'\0',sizeof(head));
 				                        memset(tail,'\0',sizeof(tail));
 										if (err != ERR_OK) {
 											printf("\r\n Publish Provision err: %d\n", err);
+											}else if (err == ERR_OK){
+												HAL_Delay(200);
+												status++;
 											}
 				                    }
 				            }
 				        }
 				        TEST: count = 0;
 				    }
+//					BaseType_t Er = pdFALSE;
+//					#define portDEFAULT_WAIT_TIME 1000
+//					xQueueMbMqtt.gotflagProvision = 3;
+//					Err = xQueueSend(xQueueUplinkHandle, &xQueueMbMqtt,portDEFAULT_WAIT_TIME);
+//						if (Err == pdPASS) {
+//							xQueueMbMqtt.gotflagProvision = 0;
+//						}else {
+//							printf("\r\n End Provvision Up queued: False \r\n");
+//						}
 				}else if (xQueueMbMqtt.gotflagcommand == 3){  // check command
 				if (xQueueMbMqtt.FunC == 3){
 					if (xQueueMbMqtt.flag32 == 1){  // U32, I32
@@ -469,8 +488,7 @@ void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_top
 				else if (err == ERR_OK){
 					xQueueMbMqtt.gotflagcommand = 0;
 				}
-			}/* --------------END OF SENDING COMAMND RESPONSE----------------------------------------------*/
-			else if (xQueueMbMqtt.gotflagLast == 1){ // send record data
+			}else if (xQueueMbMqtt.gotflagLast == 1){ // send record data
 				MX_FATFS_Init();
 				fresult = f_mount(&fs, "/", 1);
 				fresult = f_open(&fil,"record.txt", FA_READ);
@@ -489,13 +507,13 @@ void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_top
 				fresult = f_unlink("record.txt");
 				fresult = f_open(&fil,"record.txt", FA_CREATE_ALWAYS);
 				fresult = f_close(&fil);
-			}
-			else if (xQueueMbMqtt.gotflagLast == 2) {
+			}else if (xQueueMbMqtt.gotflagLast == 2) {   // telemetry
 				getTime(time);
 				timestamp_telemetry(head,time);
 				tail[strlen(tail) - 1] = '\0';
 				strcat(tail,"}}}");
 				strcat(head,tail);
+				printf("\r\n Lenght of telemetry: %d\r\n",strlen(head));
 				err = mqtt_publish(client, pub_topic,head,strlen(head), QOS_0, 0,mqtt_bridge_pub_request_cb,NULL);
 				if (err != ERR_OK) {
 					printf("\r\n Publish err: %d\n", err);
@@ -571,21 +589,18 @@ void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_top
 					strcat(tail,jsontempv1);
 					telemetry = 0;
 				}
-				//tail_telemetry(jsontemp,xQueueMbMqtt.RegAdr.i16data, xQueueMbMqtt.RegData.i16data);
 				tail_telemetry(jsontemp,xQueueMbMqtt.RegAdr.i16data, ftoastr);
 				strcat(tail,jsontemp);
 			}
 			if (counter > 1){
 				id_temp[1] = xQueueMbMqtt.NodeID;
 				if (id_temp[0] == id_temp[1]) {
-					//tail_telemetry(jsontemp,xQueueMbMqtt.RegAdr.i16data, xQueueMbMqtt.RegData.i16data);
 					tail_telemetry(jsontemp,xQueueMbMqtt.RegAdr.i16data,ftoastr);
 					strcat(tail,jsontemp);
 				}
 				else if (id_temp[0] != id_temp[1]){
 					telemetry = 1;
 					counter = 0;
-					//tail_telemetry(jsontempv1,xQueueMbMqtt.RegAdr.i16data, xQueueMbMqtt.RegData.i16data);
 					tail_telemetry(jsontempv1,xQueueMbMqtt.RegAdr.i16data, ftoastr);
 					tail[strlen(tail) - 1] = '\0';
 					strcat(tail,"},");
@@ -639,40 +654,45 @@ void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_top
 /*-------------------------------------PROVISION DOWNSTREAM AND COMMAND DOWNSTREAM---------------------------------------------------------------------------------------*/
 uint8_t mqtt_modbus_thread_down_provision(char *Buffer,uint16_t BufferLen) {
 
-		uint8_t  deviceID ,channelStatus;
-		uint16_t channelID;
-		int r;
-		jsmn_parser p;
-		jsmntok_t t[JSON_MAX_LEN]; /* We exect no morep than JSON_MAX_LEN tokens */
-		jsmn_init(&p);
-		r = jsmn_parse(&p, Buffer, BufferLen, t,sizeof(t) / sizeof(t[0]));
-		//printf("\r\n r value: %d\r\n", r);
-		if (r < 0) {
-			printf("Failed to parse JSON: %d\n", r);
-			return 1;
-		}
-		if (r < 1 || t[0].type != JSMN_OBJECT) {
-			printf("Object expected\n");
-			return 1;
-		}
-		for (uint8_t i = 0; i < r-1; i++) {
-			//printf("\r\n -value: %.*s\r\n", t[i + 1].end - t[i + 1].start,Buffer + t[i + 1].start);
+	uint8_t deviceID, channelStatus, temp;
+	uint16_t channelID;
+	int r;
+	uint16_t value = 0;
+	jsmn_parser p;
+	jsmntok_t t[JSON_MAX_LEN]; /* We expect no more than JSON_MAX_LEN tokens */
+	jsmn_init(&p);
+	xQueueMbMqtt_t xQueueMbMqtt;
+	r = jsmn_parse(&p, Buffer, BufferLen, t,sizeof(t) / sizeof(t[0]));
+	if (r < 0) {
+		printf("Failed to parse JSON: %d\n", r);
+		return 1;
+	}
+	/* Assume the top-level element is an object */
+	if (r < 1 || t[0].type != JSMN_OBJECT) {
+		printf("Object expected\n");
+		return 1;
+	}
+		for (uint8_t i = 0; i < r - 1; i++) {
 			if (i == 2){
 				deviceID = atoi(Buffer + t[i + 1].start);
-			}else if (i == 6){
+			}else if (i == 4){
 				for (uint8_t j = i; j < r-1; j++){
 					if(j % 2 == 0){
 						channelID = (uint16_t)atoi(Buffer + t[j + 1].start);
 					}
 					else if (j %2 != 0){
 						channelStatus = atoi(Buffer + t[j + 1].start);
+						for (uint8_t z =0; z <num_device ; z++){
+							if (deviceID == (dynamic+z)->deviceID && channelID == (dynamic+z)->deviceChannel){
+								channelStatus = atoi(Buffer + t[j + 1].start);;
+								(dynamic+z)->devicestatus = channelStatus;
+							}
+						}
+						printf("\r\n - deviceID %d \t channelID: %d \t channelstatus: %d\r\n",deviceID,channelID,channelStatus);
 					}
 				}
 			}
-
 		}
-
-		//printf("\r\n - deviceID %d \t channelID: %d \t channelstatus: %d\r\n",deviceID,channelID,channelStatus);
 }
 uint8_t mqtt_modbus_thread_down_command(char *pJsonMQTTBuffer,uint16_t pJsonMQTTBufferLen) {
 
@@ -694,18 +714,15 @@ uint8_t mqtt_modbus_thread_down_command(char *pJsonMQTTBuffer,uint16_t pJsonMQTT
 		}
 		for (uint8_t i = 1; i < r; i++) {
 			if (jsoneq(pJsonMQTTBuffer, &t[i], "device_id") == 0) {
-				//printf("\r\n - device_id: %.*s\n", t[i + 1].end - t[i + 1].start,pJsonMQTTBuffer + t[i + 1].start);
 				xQueueMbMqtt.NodeID = atoi(pJsonMQTTBuffer + t[i + 1].start);
 				i++;
 			}
 			else if (jsoneq(pJsonMQTTBuffer, &t[i], "channel_id") == 0) {
-				//printf("\r\n - channel_id: %.*s\n", t[i + 1].end - t[i + 1].start,pJsonMQTTBuffer + t[i + 1].start);
 				xQueueMbMqtt.RegAdr.i16data = atoi(pJsonMQTTBuffer + t[i + 1].start);
 				i++;
 			}
 			else if (jsoneq(pJsonMQTTBuffer, &t[i], "command") == 0) {
 				char cmd[20];
-				//printf("\r\n - command: %.*s\n", t[i + 1].end - t[i + 1].start,pJsonMQTTBuffer + t[i + 1].start);
 				strncpy(cmd, pJsonMQTTBuffer + t[i + 1].start, t[i + 1].end - t[i + 1].start);
 				if (strstr(cmd,"read") != NULL){
 					xQueueMbMqtt.FunC = 3;
@@ -738,5 +755,70 @@ uint8_t mqtt_modbus_thread_down_command(char *pJsonMQTTBuffer,uint16_t pJsonMQTT
 		} else {
 			printf("\r\n Modbus_MQTT Downlink queued: False \r\n");
 		}
+}
+uint8_t mqtt_modbus_thread_down_time(char *pJsonMQTTBuffer,uint16_t pJsonMQTTBufferLen){
+	/*Parsing json by using clone source :) */
+		int i;
+		int r;
+		jsmn_parser p;
+		jsmntok_t t[JSON_MAX_LEN]; /* We expect no more than JSON_MAX_LEN tokens */
+		jsmn_init(&p);
+		xQueueMbMqtt_t xQueueMbMqtt;
+		RTC_TimeTypeDef sTime = { 0 };
+		RTC_DateTypeDef sDate = { 0 };
+		r = jsmn_parse(&p, pJsonMQTTBuffer, pJsonMQTTBufferLen, t,
+				sizeof(t) / sizeof(t[0]));
+		if (r < 0) {
+			printf("Failed to parse JSON: %d\n", r);
+			return 1;
+		}
+		/* Assume the top-level element is an object */
+		if (r < 1 || t[0].type != JSMN_OBJECT) {
+			printf("Object expected\n");
+			return 1;
+		}
+		/* Loop over all keys of the root object */
+		for (i = 1; i < r; i++) {
+			if (jsoneq(pJsonMQTTBuffer, &t[i], "year") == 0) {
+				printf("\r\n -year: %.*s\n", t[i + 1].end - t[i + 1].start,pJsonMQTTBuffer + t[i + 1].start);
+				sDate.Year  = atoi(pJsonMQTTBuffer + t[i + 1].start) - 2000;
+				i++;
+			} else if (jsoneq(pJsonMQTTBuffer, &t[i], "month") == 0) {
+				/* We may additionally check if the value is either "true" or "false" */
+				printf("\r\n - month: %.*s\n", t[i + 1].end - t[i + 1].start,pJsonMQTTBuffer + t[i + 1].start);
+				sDate.Month = atoi(pJsonMQTTBuffer + t[i + 1].start);
+				i++;
+			} else if (jsoneq(pJsonMQTTBuffer, &t[i], "day") == 0) {
+				/* We may additionally check if the value is either "true" or "false" */
+				printf("\r\n - day: %.*s\n", t[i + 1].end - t[i + 1].start,pJsonMQTTBuffer + t[i + 1].start);
+				sDate.Date  = atoi(pJsonMQTTBuffer + t[i + 1].start);
+				i++;
+			} else if (jsoneq(pJsonMQTTBuffer, &t[i], "hour") == 0) {
+				/* We may additionally check if the value is either "true" or "false" */
+				printf("\r\n - hour: %.*s\n", t[i + 1].end - t[i + 1].start,pJsonMQTTBuffer + t[i + 1].start);
+				sTime.Hours = atoi(pJsonMQTTBuffer + t[i + 1].start);
+				i++;
+			} else if (jsoneq(pJsonMQTTBuffer, &t[i], "minute") == 0) {
+				/* We may additionally check if the value is either "true" or "false" */
+				printf("\r\n - minute: %.*s\n", t[i + 1].end - t[i + 1].start,pJsonMQTTBuffer + t[i + 1].start);
+				sTime.Minutes = atoi(pJsonMQTTBuffer + t[i + 1].start);
+				i++;
+			} else if (jsoneq(pJsonMQTTBuffer, &t[i], "second") == 0) {
+				/* We may additionally check if the value is either "true" or "false" */
+				printf("\r\n - second: %.*s\n", t[i + 1].end - t[i + 1].start,pJsonMQTTBuffer + t[i + 1].start);
+				sTime.Seconds = atoi(pJsonMQTTBuffer + t[i + 1].start);
+				i++;
+			}
+		}
+		if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN) != HAL_OK) {
+			printf("BUGGGGG");
+			Error_Handler();
+		}
+		if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN) != HAL_OK) {
+			printf("BUGGGGG");
+			Error_Handler();
+		}
+		__HAL_RCC_RTC_ENABLE();
+		printf("\r\n Time: %d %d %d %d %d %d \r\n", sDate.Year,sDate.Month,sDate.Date, sTime.Hours, sTime.Minutes,sTime.Seconds);
 }
 

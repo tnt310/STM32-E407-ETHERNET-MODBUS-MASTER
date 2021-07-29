@@ -377,7 +377,7 @@ int Cmd_send_provision(int argc, char *argv[])
 	xQueueMbMqtt_t xQueueMbMqtt;
 	BaseType_t Err = pdFALSE;
 	#define portDEFAULT_WAIT_TIME 1000
-	xQueueMbMqtt.gotflagProvision = 1;
+	xQueueMbMqtt.gotflagProvision = 2;
 	xQueueMbMqtt.sum_dev = num_device;
 	Err = xQueueSend(xQueueUplinkHandle, &xQueueMbMqtt,portDEFAULT_WAIT_TIME);
 		if (Err == pdPASS) {
@@ -865,3 +865,23 @@ int Cmd_test(int argc, char *argv[])
 
 }
 
+uint8_t Load_deviceStatus(uint8_t port,uint8_t deviceID,uint8_t func,char *deviceChannel,char *deviceType,char *deviceName,char *deviceTitle,char *valueType, char *regtype, uint16_t scale, uint8_t devicestatus)
+{
+	xQueueMbMqtt_t xQueueMbMqtt;
+	BaseType_t Er = pdFALSE;
+	#define portDEFAULT_WAIT_TIME 1000
+//	Err = xQueueReceive(xQueueUplinkHandle, &xQueueMbMqtt,portDEFAULT_WAIT_TIME);
+//		if (Err == pdPASS) {
+//			if (xQueueMbMqtt.gotflagProvision == 3){
+//				xQueueMbMqtt.gotflagProvision = 0;
+//				for (uint8_t i = 0; i < xQueueMbMqtt.sum_dev ; i++){
+//
+//				}
+//			}
+//			}else {
+//				printf("\r\n End Provvision Up queued: False \r\n");
+//			}
+//	char buffer[300];
+//	SD_Device(buffer, port, deviceID, func, deviceChannel, deviceType, deviceName, deviceTitle, valueType, regtype, scale,devicestatus);
+//	uint8_t status = write_sdcard("device.txt", buffer);
+}

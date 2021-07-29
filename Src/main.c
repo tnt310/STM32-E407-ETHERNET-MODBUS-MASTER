@@ -133,7 +133,7 @@ int main(void)
   MX_SDIO_SD_Init();
   MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
-	for(int i =0; i < 2; i++)
+	for(int i =0; i < 4; i++)
 	{
 		HAL_GPIO_TogglePin(USART2_LED_GPIO_Port,USART2_LED_Pin );
 		HAL_Delay(100);

@@ -128,7 +128,7 @@ void vApplicationDaemonTaskStartupHook(void);
 /* USER CODE BEGIN 4 */
 __weak void vApplicationStackOverflowHook(xTaskHandle xTask,
 		signed char *pcTaskName) {
-	printf("\r\n Task overflow: %s\r\n",pcTaskName);
+	printf("\r\n Stack overflow: %s\r\n",pcTaskName);
 	/* Run time stack overflow checking is performed if
 	 configCHECK_FOR_STACK_OVERFLOW is defined to 1 or 2. This hook function is
 	 called if a stack overflow is detected. */

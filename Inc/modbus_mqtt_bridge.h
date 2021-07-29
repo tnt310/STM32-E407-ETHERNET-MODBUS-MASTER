@@ -9,7 +9,7 @@
 /* Public define*/
 #define JSON_MAX_LEN 200
 #define portDEFAULT_WAIT_TIME 1000
-#define MAX_JSON_LEN 		  4000
+#define MAX_JSON_LEN 		  6000
 #define TEMP_JSON_LEN 		  50
 
 //#define ""
@@ -17,7 +17,7 @@ extern char recordbuffer[1000];
 
 /* Public function prototype ----------------*/
 uint8_t mqtt_modbus_thread_down_provision(char *Buffer,uint16_t BufferLen);
-void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_topic, char* command_topic);
+void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_topic, char* command_topic, char *time_topic);
 
 uint8_t mqtt_modbus_thread_down_command(char *pJsonMQTTBuffer,uint16_t pJsonMQTTBufferLen);
 

@@ -22,5 +22,5 @@ uint8_t RecordData(char *file, char *buffer);
 uint8_t CheckRecord(char *file);
 void ftoa(char buffer[20], char string[20], uint16_t scale);
 uint8_t FloatToString(char buffer[20], uint32_t float_value);
-
+uint8_t Load_deviceStatus(uint8_t port,uint8_t deviceID,uint8_t func,char *deviceChannel,char *deviceType,char *deviceName,char *deviceTitle,char *valueType, char *regtype, uint16_t scale, uint8_t devicestatus);
 #endif
