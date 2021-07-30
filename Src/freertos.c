@@ -493,6 +493,11 @@ void StartDefaultTask(void const * argument)
 							}
 						printf("\r\n");
 						fresult = f_close(&fil);
+						HAL_GPIO_WritePin(USART2_LED_GPIO_Port,USART2_LED_Pin, GPIO_PIN_SET);
+						HAL_GPIO_WritePin(USART3_LED_GPIO_Port,USART3_LED_Pin , GPIO_PIN_SET);
+						HAL_Delay(3000);
+						HAL_GPIO_WritePin(USART2_LED_GPIO_Port,USART2_LED_Pin, GPIO_PIN_RESET);
+						HAL_GPIO_WritePin(USART3_LED_GPIO_Port,USART3_LED_Pin , GPIO_PIN_RESET);
 					}
 					else if (dynamic == NULL){
 						printf("\r\n-----------------------ALLOCATING MEMORY FAIL------------------------\r\n");
