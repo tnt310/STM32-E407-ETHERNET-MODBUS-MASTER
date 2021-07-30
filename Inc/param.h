@@ -16,6 +16,7 @@ typedef struct
 	uint8_t func;
 	uint8_t numreg;
 	uint16_t regAdr;
+	uint8_t status;
 }device_t;
 
 typedef struct

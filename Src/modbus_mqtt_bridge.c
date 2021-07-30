@@ -426,6 +426,13 @@ void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_top
 					for (uint8_t i=0; i <num_device ; i++){
 						Load_deviceStatus((dynamic+i)->channel, (dynamic+i)->deviceID, (dynamic+i)->func, (dynamic+i)->deviceChannel,(dynamic+i)->deviceType,(dynamic+i)->deviceName,(dynamic+i)->channeltitle,(dynamic+i)->valueType,(dynamic+i)->regtype,(dynamic+i)->scale,(dynamic+i)->devicestatus);
 					}
+					MX_FATFS_Init();
+					if (f_mount(&fs, "/", 1) == FR_OK){
+						f_unlink("device.txt");
+						f_rename("test.txt","device.txt");
+					}else if (f_mount(&fs, "/", 1) != FR_OK){
+						printf("\r\nNOT MOUTING SD CARD, PLEASE CHECK SD CARD\r\n");
+					}
 				}else if (xQueueMbMqtt.gotflagcommand == 3){  // check command
 				if (xQueueMbMqtt.FunC == 3){
 					if (xQueueMbMqtt.flag32 == 1){  // U32, I32

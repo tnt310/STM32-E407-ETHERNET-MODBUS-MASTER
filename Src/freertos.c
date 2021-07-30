@@ -472,7 +472,7 @@ void StartDefaultTask(void const * argument)
 //			if (BSP_SD_Init() == MSD_OK)
 //				{
 					fresult = f_mount(&fs, "/", 1);
-					fresult = f_open(&fil,"demo.txt", FA_READ);
+					fresult = f_open(&fil,"device.txt", FA_READ);
 					for (line= 0; (f_eof(&fil) == 0); line++)
 						{
 							f_gets((char*)SDbuffer, sizeof(SDbuffer), &fil);
@@ -483,7 +483,7 @@ void StartDefaultTask(void const * argument)
 					dynamic = (data1_t*)pvPortMalloc(line * sizeof(data1_t));
 					if (dynamic != NULL){
 						fresult = f_mount(&fs, "/", 1);
-						fresult = f_open(&fil,"demo.txt", FA_READ);
+						fresult = f_open(&fil,"device.txt", FA_READ);
 						for (uint8_t i = 0; (f_eof(&fil) == 0); i++)
 							{
 								memset(SDbuffer,'\0',sizeof(SDbuffer));

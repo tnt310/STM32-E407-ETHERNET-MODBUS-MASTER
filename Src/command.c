@@ -847,7 +847,6 @@ float ConvertNumberToFloat(unsigned long number, int isDoublePrecision)
     float value = (sign ? -1 : 1) * pow(2.0, exponent) * (total + 1.0);
     return value;
 }
-
 uint8_t FloatToString(char buffer[20], uint32_t float_value)
 {
 	char string[20];
@@ -870,6 +869,7 @@ uint8_t Load_deviceStatus(uint8_t port,uint8_t deviceID,uint8_t func,uint16_t de
 	char buffer[300], channel_temp[10];
 	itoa(deviceChannel,channel_temp,10);
 	SD_Device(buffer, port, deviceID, func,channel_temp, deviceType, deviceName, deviceTitle, valueType, regtype, scale,devicestatus);
-	printf("\r\n Lenght of device buffer: %d\r\n", strlen(buffer));
-	uint8_t status = write_sdcard("device.txt", buffer);
+	uint8_t status = write_sdcard("test.txt", buffer);
+//	f_unlink(file);
+//	f_rename("temp.txt",file);
 }

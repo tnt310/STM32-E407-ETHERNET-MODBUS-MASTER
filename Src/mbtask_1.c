@@ -129,55 +129,56 @@ void ModbusTestTask(void const *argument) {
 				                            	device.func = (dynamic +z)->func;
 				                            	device.regAdr = (dynamic +z)->deviceChannel;
 				                            	device.numreg =(dynamic +z)->numreg;
+				                            	device.status = (dynamic +z)->devicestatus;
 				                            	flag = 1;
-				                            	switch(device.channel)
-				                            	{
-				                            		case 1:
-				                            		{
-				                            			//printf("\r\n DA VAO CASE 1 \r\n");
-														switch(device.func)
-														{
-															case MB_FUNC_READ_HOLDING_REGISTER:
-																if (eMBMasterReqReadHoldingRegister(device.channel, device.id, device.regAdr,device.numreg, MB_DEFAULT_TEST_TIMEOUT) ==MB_MRE_NO_ERR){
-																	packet ++;
-																}else{
-																	SD_ErrorPacket(err_buffer, device.channel, device.id, device.regAdr);
-																	write_sdcard("event.txt",err_buffer);
-																	error ++;
-																}
-																break;
-															case MB_FUNC_READ_COILS:
-																eMBMasterReqReadCoils(device.channel, device.id, device.regAdr,device.numreg, MB_DEFAULT_TEST_TIMEOUT);
-																break;
-															case MB_FUNC_READ_INPUT_REGISTER:
-																eMBMasterReqReadInputRegister(device.channel, device.id, device.regAdr,device.numreg, MB_DEFAULT_TEST_TIMEOUT);
-																//break;
-														}
-				                            		}
-				                            		break;
-				                            		case 0:
-				                            		{
-				                            			//printf("\r\n DA VAO CASE 0 \r\n");
-														switch(device.func)
-														{
-															case MB_FUNC_READ_HOLDING_REGISTER:
-																if (eMBMasterReqReadHoldingRegister(device.channel, device.id, device.regAdr,device.numreg, MB_DEFAULT_TEST_TIMEOUT) ==MB_MRE_NO_ERR){
-																	packet ++;
-																}else{
-																	SD_ErrorPacket(err_buffer, device.channel, device.id, device.regAdr);
-																	write_sdcard("event.txt",err_buffer);
-																	error ++;
-																}
-																break;
-															case MB_FUNC_READ_COILS:
-																eMBMasterReqReadCoils(device.channel, device.id, device.regAdr,device.numreg, MB_DEFAULT_TEST_TIMEOUT);
-																break;
-															case MB_FUNC_READ_INPUT_REGISTER:
-																eMBMasterReqReadInputRegister(device.channel, device.id, device.regAdr,device.numreg, MB_DEFAULT_TEST_TIMEOUT);
-																//break;
-														}
-														break;
-				                            		}
+				                            	if (device.status == 1){
+					                            	switch(device.channel)
+					                            	{
+					                            		case 1:
+					                            		{
+															switch(device.func)
+															{
+																case MB_FUNC_READ_HOLDING_REGISTER:
+																	if (eMBMasterReqReadHoldingRegister(device.channel, device.id, device.regAdr,device.numreg, MB_DEFAULT_TEST_TIMEOUT) ==MB_MRE_NO_ERR){
+																		packet ++;
+																	}else{
+																		SD_ErrorPacket(err_buffer, device.channel, device.id, device.regAdr);
+																		write_sdcard("event.txt",err_buffer);
+																		error ++;
+																	}
+																	break;
+																case MB_FUNC_READ_COILS:
+																	eMBMasterReqReadCoils(device.channel, device.id, device.regAdr,device.numreg, MB_DEFAULT_TEST_TIMEOUT);
+																	break;
+																case MB_FUNC_READ_INPUT_REGISTER:
+																	eMBMasterReqReadInputRegister(device.channel, device.id, device.regAdr,device.numreg, MB_DEFAULT_TEST_TIMEOUT);
+																	//break;
+															}
+					                            		}
+					                            		break;
+					                            		case 0:
+					                            		{
+															switch(device.func)
+															{
+																case MB_FUNC_READ_HOLDING_REGISTER:
+																	if (eMBMasterReqReadHoldingRegister(device.channel, device.id, device.regAdr,device.numreg, MB_DEFAULT_TEST_TIMEOUT) ==MB_MRE_NO_ERR){
+																		packet ++;
+																	}else{
+																		SD_ErrorPacket(err_buffer, device.channel, device.id, device.regAdr);
+																		write_sdcard("event.txt",err_buffer);
+																		error ++;
+																	}
+																	break;
+																case MB_FUNC_READ_COILS:
+																	eMBMasterReqReadCoils(device.channel, device.id, device.regAdr,device.numreg, MB_DEFAULT_TEST_TIMEOUT);
+																	break;
+																case MB_FUNC_READ_INPUT_REGISTER:
+																	eMBMasterReqReadInputRegister(device.channel, device.id, device.regAdr,device.numreg, MB_DEFAULT_TEST_TIMEOUT);
+																	//break;
+															}
+															break;
+					                            		}
+					                            	}
 				                            	}
 				                            	HAL_Delay(100);
 				                            }
