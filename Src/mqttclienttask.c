@@ -118,7 +118,7 @@ void mqtt_connection_cb(mqtt_client_t *client, void *arg,mqtt_connection_status_
 		/* Setup callback for incoming publish requests */
 		mqtt_set_inpub_callback(client, mqtt_incoming_publish_cb,mqtt_incoming_data_cb, arg);
 		/* Subscribe to a topic named "subtopic" with QoS level 1, call mqtt_sub_request_cb with result */
-		err_tp = mqtt_subscribe(client,time, 1,  mqtt_time_request_cb, arg);
+		err_tp = mqtt_subscribe(client,time, 0,  mqtt_time_request_cb, arg);
 		if (err_tp != ERR_OK) {
 			printf("\r\n mqtt_subscribe provision return: %d\r\n",err_tp);
 		}

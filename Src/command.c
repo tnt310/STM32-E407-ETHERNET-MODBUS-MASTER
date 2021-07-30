@@ -37,7 +37,7 @@ FIL fil_temp;
 FRESULT fresult;
 DIR dirOject;
 FILINFO fileInfo;
-char SDbuffer[200];
+char SDbuffer[300];
 uint8_t record[200];
 size_t packet, error, done;
 
@@ -865,23 +865,11 @@ int Cmd_test(int argc, char *argv[])
 
 }
 
-uint8_t Load_deviceStatus(uint8_t port,uint8_t deviceID,uint8_t func,char *deviceChannel,char *deviceType,char *deviceName,char *deviceTitle,char *valueType, char *regtype, uint16_t scale, uint8_t devicestatus)
+uint8_t Load_deviceStatus(uint8_t port,uint8_t deviceID,uint8_t func,uint16_t deviceChannel,char *deviceType,char *deviceName,char *deviceTitle,char *valueType, char *regtype, uint16_t scale, uint8_t devicestatus)
 {
-	xQueueMbMqtt_t xQueueMbMqtt;
-	BaseType_t Er = pdFALSE;
-	#define portDEFAULT_WAIT_TIME 1000
-//	Err = xQueueReceive(xQueueUplinkHandle, &xQueueMbMqtt,portDEFAULT_WAIT_TIME);
-//		if (Err == pdPASS) {
-//			if (xQueueMbMqtt.gotflagProvision == 3){
-//				xQueueMbMqtt.gotflagProvision = 0;
-//				for (uint8_t i = 0; i < xQueueMbMqtt.sum_dev ; i++){
-//
-//				}
-//			}
-//			}else {
-//				printf("\r\n End Provvision Up queued: False \r\n");
-//			}
-//	char buffer[300];
-//	SD_Device(buffer, port, deviceID, func, deviceChannel, deviceType, deviceName, deviceTitle, valueType, regtype, scale,devicestatus);
-//	uint8_t status = write_sdcard("device.txt", buffer);
+	char buffer[300], channel_temp[10];
+	itoa(deviceChannel,channel_temp,10);
+	SD_Device(buffer, port, deviceID, func,channel_temp, deviceType, deviceName, deviceTitle, valueType, regtype, scale,devicestatus);
+	printf("\r\n Lenght of device buffer: %d\r\n", strlen(buffer));
+	uint8_t status = write_sdcard("device.txt", buffer);
 }

@@ -255,10 +255,11 @@ void MX_FREERTOS_Init(void) {
 void StartDefaultTask(void const * argument)
 {
   /* init code for LWIP */
-	LoadSdcard("config.txt");
-	USER_USART2_UART_Init();
-	USER_USART3_UART_Init();
-	MX_LWIP_Init();
+	if (LoadSdcard("config.txt") == 1){
+		MX_LWIP_Init();
+		USER_USART2_UART_Init();
+		USER_USART3_UART_Init();
+	}
   /* USER CODE BEGIN StartDefaultTask */
 	/*Create Task Modules in this line*/
 
