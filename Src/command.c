@@ -582,6 +582,7 @@ int Cmd_get_time(int argc, char *argv[])
 }
 static uint8_t overwrite_file(char *file, char *data, uint8_t line)
 {
+	uint8_t status = 0;
 	uint8_t lct = 0;
 	MX_FATFS_Init();
 	if (f_mount(&fs, "/", 1) == FR_OK){
@@ -596,6 +597,7 @@ static uint8_t overwrite_file(char *file, char *data, uint8_t line)
 						f_puts(data, &fil_temp);
 						f_close(&fil_temp);
 						lct++;
+						status = 1;
 					}
 					else if (lct != line){
 						lct++;
@@ -612,6 +614,7 @@ static uint8_t overwrite_file(char *file, char *data, uint8_t line)
 	}else if (f_mount(&fs,"/", 1) != FR_OK) {
 		printf("\r\nNOT MOUTING SD CARD, PLEASE CHECK SD CARD\r\n");
 	}
+	return status;
 }
 
 int Cmd_set_timeout(int argc, char *argv[]) // timeout: 15s, 30s, 1p, 3p, 5p, 10p
@@ -620,7 +623,15 @@ int Cmd_set_timeout(int argc, char *argv[]) // timeout: 15s, 30s, 1p, 3p, 5p, 10
 	char buffer[20];
 	SD_timeout(buffer,timeout);
 	printf("\r\n timeout is set: %s\r\n",buffer);
-	overwrite_file("config.txt",buffer, 5);
+	if (overwrite_file("config.txt",buffer, 5) == 1){
+		char *receivedChar = "timeout\n";
+		HAL_UART_Transmit(&huart6,(uint8_t*)receivedChar, 8, 100);
+		HAL_GPIO_TogglePin(USART2_LED_GPIO_Port,USART2_LED_Pin);
+		HAL_GPIO_TogglePin(USART3_LED_GPIO_Port,USART3_LED_Pin);
+		HAL_Delay(100);
+		HAL_GPIO_TogglePin(USART2_LED_GPIO_Port,USART2_LED_Pin);
+		HAL_GPIO_TogglePin(USART3_LED_GPIO_Port,USART3_LED_Pin);
+	}
 }
 int Cmd_set_apikey(int argc, char *argv[])
 {
@@ -628,7 +639,15 @@ int Cmd_set_apikey(int argc, char *argv[])
 	char buffer[100];
 	SD_apikey(buffer,key);
 	printf("\r\n apikey is set: %s\r\n",buffer);
-	overwrite_file("config.txt",buffer, 4);
+	if (overwrite_file("config.txt",buffer, 4) == 1){
+		char *receivedChar = "apikey\n";
+		HAL_UART_Transmit(&huart6,(uint8_t*)receivedChar, 7, 100);
+		HAL_GPIO_TogglePin(USART2_LED_GPIO_Port,USART2_LED_Pin);
+		HAL_GPIO_TogglePin(USART3_LED_GPIO_Port,USART3_LED_Pin);
+		HAL_Delay(100);
+		HAL_GPIO_TogglePin(USART2_LED_GPIO_Port,USART2_LED_Pin);
+		HAL_GPIO_TogglePin(USART3_LED_GPIO_Port,USART3_LED_Pin);
+	}
 }
 int Cmd_set_telemetry(int argc, char *argv[])
 {
@@ -636,7 +655,10 @@ int Cmd_set_telemetry(int argc, char *argv[])
 	char buffer[20];
 	SD_telemetry(buffer, telemetry);
 	printf("\r\n telemetry is set: %s\r\n",buffer);
-	overwrite_file("config.txt",buffer, 6);
+	if (overwrite_file("config.txt",buffer, 6) == 1){
+		char *receivedChar = "telemetry\n";
+		HAL_UART_Transmit(&huart6,(uint8_t*)receivedChar, 10, 100);
+	}
 	uint32_t handle = 1;
 	xQueueSend(xQueueResetHandle,&handle,portMAX_DELAY);
 }
@@ -649,7 +671,15 @@ int Cmd_set_port0(int argc, char *argv[]) // timeout: 15s, 30s, 1p, 3p, 5p, 10p
 	char buffer[100];
 	SD_Serial(buffer,2, baud,dbbits, stops, parity);
 	printf("\r\n port0 is set: %s\r\n",buffer);
-	overwrite_file("config.txt",buffer, 2);
+	if (overwrite_file("config.txt",buffer, 2) == 1){
+		char *receivedChar = "port0\n";
+		HAL_UART_Transmit(&huart6,(uint8_t*)receivedChar, 6, 100);
+		HAL_GPIO_TogglePin(USART2_LED_GPIO_Port,USART2_LED_Pin);
+		HAL_GPIO_TogglePin(USART3_LED_GPIO_Port,USART3_LED_Pin);
+		HAL_Delay(100);
+		HAL_GPIO_TogglePin(USART2_LED_GPIO_Port,USART2_LED_Pin);
+		HAL_GPIO_TogglePin(USART3_LED_GPIO_Port,USART3_LED_Pin);
+	}
 }
 int Cmd_set_port1(int argc, char *argv[]) // timeout: 15s, 30s, 1p, 3p, 5p, 10p
 {
@@ -660,7 +690,15 @@ int Cmd_set_port1(int argc, char *argv[]) // timeout: 15s, 30s, 1p, 3p, 5p, 10p
 	char buffer[100];
 	SD_Serial(buffer,3, baud,dbbits, stops, parity);
 	printf("\r\n port1 is set: %s\r\n",buffer);
-	overwrite_file("config.txt",buffer, 3);
+	if (overwrite_file("config.txt",buffer, 3) == 1){
+		char *receivedChar = "port1\n";
+		HAL_UART_Transmit(&huart6,(uint8_t*)receivedChar, 6, 100);
+		HAL_GPIO_TogglePin(USART2_LED_GPIO_Port,USART2_LED_Pin);
+		HAL_GPIO_TogglePin(USART3_LED_GPIO_Port,USART3_LED_Pin);
+		HAL_Delay(100);
+		HAL_GPIO_TogglePin(USART2_LED_GPIO_Port,USART2_LED_Pin);
+		HAL_GPIO_TogglePin(USART3_LED_GPIO_Port,USART3_LED_Pin);
+	}
 }
 int Cmd_set_network(int argc, char *argv[]) // timeout: 15s, 30s, 1p, 3p, 5p, 10p
 {
@@ -670,7 +708,15 @@ int Cmd_set_network(int argc, char *argv[]) // timeout: 15s, 30s, 1p, 3p, 5p, 10
 	char buffer[200];
 	SD_Network(buffer, ip, netmask, gateway);
 	printf("\r\n network is set: %s\r\n",buffer);
-	overwrite_file("config.txt",buffer, 0);
+	if (overwrite_file("config.txt",buffer, 0) == 1){
+		char *receivedChar = "network\n";
+		HAL_UART_Transmit(&huart6,(uint8_t*)receivedChar, 8, 100);
+		HAL_GPIO_TogglePin(USART2_LED_GPIO_Port,USART2_LED_Pin);
+		HAL_GPIO_TogglePin(USART3_LED_GPIO_Port,USART3_LED_Pin);
+		HAL_Delay(100);
+		HAL_GPIO_TogglePin(USART2_LED_GPIO_Port,USART2_LED_Pin);
+		HAL_GPIO_TogglePin(USART3_LED_GPIO_Port,USART3_LED_Pin);
+	}
 }
 int Cmd_set_mqttInfo(int argc, char *argv[]) // timeout: 15s, 30s, 1p, 3p, 5p, 10p
 {
@@ -682,7 +728,15 @@ int Cmd_set_mqttInfo(int argc, char *argv[]) // timeout: 15s, 30s, 1p, 3p, 5p, 1
 	char buffer[200];
 	SD_Mqtt(buffer, port,id, username, pwd, broker);
 	printf("\r\n mqttInfo is set: %s\r\n",buffer);
-	overwrite_file("config.txt",buffer, 1);
+	if (overwrite_file("config.txt",buffer, 1) == 1){
+		char *receivedChar = "mqtt\n";
+		HAL_UART_Transmit(&huart6,(uint8_t*)receivedChar, 5, 100);
+		HAL_GPIO_TogglePin(USART2_LED_GPIO_Port,USART2_LED_Pin);
+		HAL_GPIO_TogglePin(USART3_LED_GPIO_Port,USART3_LED_Pin);
+		HAL_Delay(100);
+		HAL_GPIO_TogglePin(USART2_LED_GPIO_Port,USART2_LED_Pin);
+		HAL_GPIO_TogglePin(USART3_LED_GPIO_Port,USART3_LED_Pin);
+	}
 }
 
 /*---------------------------SAVE------------------------------------------------------------------------------*/

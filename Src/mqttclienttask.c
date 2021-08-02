@@ -140,7 +140,7 @@ void mqtt_connection_cb(mqtt_client_t *client, void *arg,mqtt_connection_status_
 		mqtt_client_info.client_pass = mqtt_password;
 		mqtt_client_info.keep_alive = 1000;
 		mqtt_client_info.will_topic = NULL;
-		mqtt_client_info.will_qos = 1;
+		mqtt_client_info.will_qos = 0;
 		mqtt_client_info.will_retain = 0;
 		err_t err;
 		err = mqtt_client_connect(client, &broker_ipaddr,u16_mqtt_port,mqtt_connection_cb, NULL, &mqtt_client_info);
@@ -190,7 +190,7 @@ void netmqttTask(void *arg) {
 	mqtt_client_info.client_pass = mqtt_password;
 	mqtt_client_info.keep_alive = 1000;
 	mqtt_client_info.will_topic = NULL;
-	mqtt_client_info.will_qos = 1;
+	mqtt_client_info.will_qos = 0;
 	mqtt_client_info.will_retain = 0;
 	mqtt_client = mqtt_client_new();
 	er = mqtt_client_connect(mqtt_client, &broker_ipaddr,u16_mqtt_port,mqtt_connection_cb, NULL, &mqtt_client_info);

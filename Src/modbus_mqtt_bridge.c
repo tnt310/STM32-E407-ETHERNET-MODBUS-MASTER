@@ -144,7 +144,7 @@ void parse_sdcardInfo(char *Buffer, uint16_t BufferLen)
 		}else if (jsoneq(Buffer, &t[i], "mqtt") == 0){
 			//printf("\r\n - mqtt: %.*s\r\n", t[i + 1].end - t[i + 1].start,Buffer + t[i + 1].start);
 			for (uint8_t j = i; j < r-1; j++){
-				if (jsoneq(Buffer, &t[j], "Id") == 0){
+				if (jsoneq(Buffer, &t[j], "mqttId") == 0){
 					//printf("\r\n -mqttId: %.*s\r\n", t[j + 1].end - t[j + 1].start,Buffer + t[j + 1].start);
 					//char Id[20];
 					strncpy(Id,Buffer + t[j + 1].start, t[j + 1].end - t[j + 1].start);
@@ -353,7 +353,6 @@ static void mqtt_bridge_command_request_cb(void *arg, err_t result) {
 void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_topic, char* command_topic, char *time_topic) {
 
 	char *hello_server = "{time}";
-	mqtt_publish(client,time_topic,hello_server,strlen(hello_server), QOS_1, 0,mqtt_bridge_time_request_cb,NULL);
 	uint8_t time[6];
 	static uint8_t counter = 0;
 	static uint8_t telemetry = 0;
@@ -367,6 +366,8 @@ void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_top
 	memset(tail,'\0',sizeof(tail));
 	static uint8_t count = 0;
 	err_t err;
+	HAL_Delay(200);
+	err = mqtt_publish(client,time_topic,hello_server,strlen(hello_server), QOS_1, 0,mqtt_bridge_time_request_cb,NULL);
 	while (1) {
 		Err = xQueueReceive(xQueueUplinkHandle, &xQueueMbMqtt,portDEFAULT_WAIT_TIME*3);
 		if (Err == pdPASS) {
@@ -434,6 +435,7 @@ void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_top
 						printf("\r\nNOT MOUTING SD CARD, PLEASE CHECK SD CARD\r\n");
 					}
 				}else if (xQueueMbMqtt.gotflagcommand == 3){  // check command
+					//printf("\r\n DA VAO COMAMD \r\n");
 				if (xQueueMbMqtt.FunC == 3){
 					if (xQueueMbMqtt.flag32 == 1){  // U32, I32
 						xQueueMbMqtt.flag32 = 0;
@@ -475,7 +477,7 @@ void mqtt_modbus_thread_up(mqtt_client_t *client, char *pub_topic, char* pro_top
 				else if (xQueueMbMqtt.FunC == 6){
 					command_write_json(head, xQueueMbMqtt.NodeID, xQueueMbMqtt.RegAdr.i16data);
 				}
-				err = mqtt_publish(client,command_topic, head,strlen(head), QOS_0, 0,mqtt_bridge_command_request_cb,NULL);
+				err = mqtt_publish(client,command_topic,head,strlen(head), QOS_0, 0,mqtt_bridge_command_request_cb,NULL);
 				if (err != ERR_OK) {
 					printf("\r\n Publish command err: %d\n", err);
 					}
@@ -742,6 +744,7 @@ uint8_t mqtt_modbus_thread_down_command(char *pJsonMQTTBuffer,uint16_t pJsonMQTT
 		}
 		xQueueMbMqtt.PortID = 0;
 		printf("\r\n command: %d\t%d\t%d\t%d\r\n",xQueueMbMqtt.NodeID,xQueueMbMqtt.RegAdr.i16data,xQueueMbMqtt.FunC,xQueueMbMqtt.RegData.i16data);
+		//xQueueMbMqtt.gotflagcommand = 3;
 		BaseType_t Err = pdFALSE;
 		Err = xQueueSend(xQueueDownlinkHandle, &xQueueMbMqtt,portDEFAULT_WAIT_TIME);
 		if (Err == pdPASS) {
